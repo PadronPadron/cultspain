@@ -1,23 +1,61 @@
-# CULT SPAIN — первый прототип
+# CULT SPAIN · Cut & Style
 
-Статический интерактивный прототип по ТЗ от 26 октября 2026 года.
+Sitio en español con agenda, CRM y gestión de compras y documentos. Diseño monocromo con fotografías en su color original.
 
-- `dist/index.html`: публичная страница на испанском, исходные цветные фотографии, услуги, календарь, пробная запись.
-- `dist/admin.html`: обзор, записи, CRM, упрощённые финансы, CSV, недельный график и исключения для дат.
-- `dist/model.js`: правила доступности и локальная модель данных.
+## Desarrollo local
 
-## Статус
+Requisitos: Node.js 22.13 o superior. Las dependencias y las migraciones ya están instaladas en este equipo. En un clon nuevo: `npm ci`, `npm run build`, `npm run db:migrate:local`.
 
-Это частная демонстрация. Услуги, цены и часы — примеры, а не подтверждённое предложение салона. Записи и финансы хранятся в localStorage этого браузера. Использовать только вымышленные клиентские данные. Настоящая авторизация, общая база, серверные права, уведомления, фискальные документы не подключены. Онлайн-оплата и предоплата через сайт исключены по указанию пользователя; в админке только ручной учёт расчётов в салоне. Ограничение доступа к частному сайту не заменяет будущую авторизацию админки.
+```sh
+npm run dev -- --port 4173 --hostname 127.0.0.1
+```
 
-Поддержаны в прототипе: выбор услуги/даты/времени, создание и отмена записи, завершение визита, полная демо-оплата, карточка клиента с историей, расходы, CSV, изменение недели и исключений. Изменение графика блокируется при конфликте с записями. Ручная корректировка в этой версии — одна дата, без отдельного перерыва. Неделя применяется сразу к будущим датам; версии графика с датой начала пока не реализованы.
+- Sitio: http://127.0.0.1:4173/
+- Administración: http://127.0.0.1:4173/admin.html
+- También puedes abrir `Iniciar CULT local.command` en macOS.
 
-Следующие этапы ТЗ: утверждение услуг/цен/часов и контента; серверная запись с защитой от гонок и ролями; переносы, частичные оплаты и возвраты; полноценный журнал, отчёты по периодам и документы; интеграция уведомлений и бухгалтерского сервиса.
+Los registros se guardan en D1 local y los archivos en R2 local, dentro de `.wrangler/state/`. Son independientes del almacenamiento del navegador. La versión anterior de localStorage permanece intacta y no se importa automáticamente. Los datos del ordenador y los del alojamiento son bases distintas.
 
-## Локальный просмотр
+## Funciones
 
-`python3 -m http.server 4173 --bind 127.0.0.1 --directory dist`
+- Clientes: nombre, apellidos, teléfono, email, datos opcionales de facturación, notas, historial y archivo.
+- Materiales: nombre, marca, referencia/tono, unidad, precio orientativo, proveedor y edición. Puede crearse un material desde el formulario de gasto.
+- Proveedores: contacto, teléfono, email, NIF/CIF, dirección y notas.
+- Gastos: material opcional, proveedor, pedido, cantidad, precio real, base, impuesto explícito, total, factura, estado y fecha de pago. Las correcciones requieren motivo y conservan historial. Cambiar el catálogo no altera los gastos anteriores.
+- Pedidos: varias líneas, precios conservados, estados, impresión y guardado en PDF mediante el navegador. No envía pedidos ni genera gastos automáticamente.
+- Documentos: originales PDF/JPEG/PNG/WebP de hasta 10 MB, relación con cliente/proveedor/pedido/gasto, datos editables, descarga, archivo recuperable y SHA-256. No hay borrado físico desde la interfaz.
+- Exportación para asesoría: gastos CSV, clientes CSV, catálogos, pedidos, metadatos, historial y originales en ZIP. El periodo filtra por fecha del gasto o documento; el archivo de gastos incluye archivados para revisar la historia.
+- Reservas: servicio, calendario, hora, nombre, apellidos, teléfono y email opcional. La base impide citas solapadas incluso con peticiones simultáneas. Los cambios de horario comprueban conflictos.
+- Cobros: solo marcas manuales del pago en el salón. Sin pasarela de pago ni anticipos online.
 
-Открыть http://127.0.0.1:4173. Проверки логики: `node --test tests/model.test.mjs`.
+Servicios, precios y horarios siguen siendo ejemplos pendientes de aprobación. La gestión fiscal y el envío a la AEAT no están automatizados. Ver [CONTABILIDAD](docs/CONTABILIDAD.md).
 
-Фотографии предоставлены пользователем. Исходные файлы сохранены в папке материалов родительского проекта. Для типографики используются Manrope и Cormorant Garamond с системными резервными шрифтами.
+## Cloudflare
+
+Repositorio: https://github.com/PadronPadron/cultspain
+Dominio: https://cultspain.com
+Worker existente: `cultspain`.
+
+- D1 `cultspain-db` creada en jurisdicción UE. Esquema inicial y dos migraciones verificadas en la consola del panel el 26/10/2026. No contiene datos locales de prueba.
+- Binding `DB` del Worker conectado a `cultspain-db` y verificado en el panel.
+- R2 `cultspain-documents` prevista en UE; pendiente de activación de R2 en la cuenta. El panel solicita una suscripción con posibles cargos por uso.
+- La integración Git del Worker figura como desconectada en el panel. Debe reconectarse para desplegar desde GitHub.
+- La administración en producción se cierra por defecto. Debe configurarse Cloudflare Access y las variables de la propietaria antes del uso real.
+
+Configuración y pasos: [CLOUDFLARE](docs/CLOUDFLARE.md).
+
+## Verificación
+
+```sh
+npm test
+npm run typecheck
+npm run build:cloudflare
+```
+
+Integración local (crea registros identificados como pruebas y los archiva): `node tests/api.integration.mjs` con el servidor iniciado. No ejecutarla contra producción.
+
+Las migraciones aplicadas se conservan sin modificarlas. El esquema está en `db/schema.ts`; `npm run db:generate` añade nuevas migraciones.
+
+## Copia de seguridad
+
+La exportación para asesoría es un paquete de trabajo, no un respaldo completo del sistema. Para un respaldo local completo, detén el servidor y copia `.wrangler/state/` con los datos D1 y R2, además del código. Conserva la copia fuera de esta carpeta. En producción, D1 Time Travel y una copia separada de objetos R2 deben configurarse antes de usar documentos reales. No se han programado copias remotas automáticas en esta versión.

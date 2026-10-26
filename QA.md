@@ -1,11 +1,12 @@
-# Проверка первого прототипа — 26 октября 2026
+# Verificación · 26/10/2026
 
-- 6 проверок модели прошли: длительность и перерыв, отсутствие пересечений, отказ дубликату и освобождение после отмены, исключения графика, прошлые даты/горизонт, проверка часов и конфликтов.
-- В Chrome создана пробная запись на вымышленного клиента. Запись появилась в админке.
-- Попытка закрыть занятый день заблокирована с сообщением о конфликте; другой день успешно закрыт и стал недоступен в клиентском календаре.
-- Проверены завершение визита, отдельная полная демо-оплата и добавление расхода: 45 € поступлений − 12,50 € расходов = 32,50 €.
-- Проверен вид главной страницы и админки на компьютере; главная и календарь также проверены при ширине 390 px. Горизонтальное переполнение страницы отсутствует.
-- В финальной загрузке главной страницы ошибок консоли не обнаружено.
-- Скриншоты сохранены локально в `qa/` и не включены в публикацию. Пробные операции находятся только в браузере локального просмотра, не в исходниках и не в опубликованной базе.
+- Diez pruebas unitarias superadas: agenda, huecos y margen, conflictos, importes, fechas, tipos de archivo y validación JWT de Access.
+- TypeScript y compilación de Worker superados.
+- Integración D1/R2 local: altas, edición y rechazo de revisión obsoleta; precio histórico de gasto conservado; correcciones con motivo y auditoría; pedido con total; subida y descarga con bytes idénticos; rechazo de archivo con extensión falsa; API pública sin contactos; dos peticiones simultáneas al mismo hueco producen una reserva; archivo recuperable.
+- En Chrome: creados y editados proveedor y material de ejemplo; gasto de 2 tubos a 12,50 € = 25 €; pedido de 4 tubos = 50 €; formularios y mensajes en español. Datos de ejemplo identificados como tales.
+- Exportación ZIP completada desde la interfaz. Archivos descargados comprobables en Downloads. Formato ZIP y CRC verificados también con Python. La extensión no notificó el evento download aunque Chrome sí guardó los archivos.
+- La subida por selector automatizado está limitada por el permiso file URLs de la extensión. No se cambió ese permiso. La API de subida, el contenido original y la descarga se verificaron de forma independiente; se adjuntó una captura de ejemplo a un gasto local.
+- Cloudflare: D1 creada en UE, SQL aplicado y listado de tablas verificado en el panel. R2 bloqueado por la activación de la suscripción. No se aceptaron condiciones ni cargos.
+- Los datos de pruebas están archivados, se conserva el historial y los originales; no se introdujeron en la base de producción. Los ejemplos visibles son ficticios y editables.
 
-Рамки: это прототип, не производственная система. CSV формируется программно; скачивание и совместимость с программой бухгалтера отдельно не проверялись. Серверная синхронизация, реальные уведомления и авторизация ролей отсутствуют.
+Pendientes antes del uso real: R2 remoto, integración Git, bindings y Access, comprobación final del despliegue, servicios/horario reales, notificaciones, reglas fiscales y respaldo remoto.

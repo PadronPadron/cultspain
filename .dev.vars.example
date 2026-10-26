@@ -1,0 +1,4 @@
+# Solo para pruebas locales de autenticación; no incluir valores reales en Git.
+CF_ACCESS_TEAM_DOMAIN=
+CF_ACCESS_AUD=
+ADMIN_EMAIL=

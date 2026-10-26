@@ -1,0 +1,20 @@
+{
+  "name": "cultspain",
+  "account_id": "88e1f01fc832269f5db483d3499cc7e9",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cultspain-db",
+      "database_id": "483999f1-7667-4b24-b70d-6b48dc8f952f",
+      "migrations_dir": "../../drizzle",
+      "jurisdiction": "eu"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "cultspain-documents",
+      "jurisdiction": "eu"
+    }
+  ]
+}

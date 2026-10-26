@@ -1,0 +1,4 @@
+import{test}from'node:test';import assert from'node:assert/strict';import{totals,quantity,date,sniffFile}from'../lib/accounting.ts';
+test('expense totals round per line and keep explicit tax separate',()=>{assert.deepEqual(totals(3,1234,777),{quantity:3,priceCents:1234,netCents:3702,taxCents:777,totalCents:4479});assert.equal(totals(0.125,999,0).netCents,125);assert.throws(()=>totals(2,Number.NaN,0));assert.throws(()=>quantity(0));assert.throws(()=>quantity(0.0001));assert.throws(()=>totals(100000,100000000,0))});
+test('date validation rejects impossible calendar dates',()=>{assert.equal(date('2026-10-26'),'2026-10-26');assert.throws(()=>date('2026-02-31'))});
+test('uploads use file signatures rather than browser MIME or extension',()=>{assert.equal(sniffFile(new TextEncoder().encode('%PDF-1.7\ntest')),'application/pdf');assert.throws(()=>sniffFile(new TextEncoder().encode('<script>alert(1)</script>')))});

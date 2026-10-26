@@ -1,0 +1,12 @@
+// Cloudflare Access application JWT verification for the independent Cloudflare deployment.
+type Config={teamDomain:string;audience:string;adminEmail:string};
+const decode=(s:string)=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+let cached:{domain:string;at:number;keys:JsonWebKey[]}|undefined;
+export async function verifyAccessJWT(token:string,config:Config,loadKeys?:()=>Promise<JsonWebKey[]>){
+ if(!/^[a-z0-9-]+\.cloudflareaccess\.com$/.test(config.teamDomain)||!config.audience||!config.adminEmail)throw Error('Cloudflare Access no está configurado.');
+ if(!token||token.length>16384)throw Error('Inicia sesión para continuar.');const parts=token.split('.');if(parts.length!==3)throw Error('Sesión no válida.');let header:any,payload:any;try{header=JSON.parse(new TextDecoder().decode(decode(parts[0])));payload=JSON.parse(new TextDecoder().decode(decode(parts[1])))}catch{throw Error('Sesión no válida.')}
+ if(header.alg!=='RS256'||typeof header.kid!=='string')throw Error('Firma de sesión no válida.');
+ async function keys(force=false){if(loadKeys)return loadKeys();if(!force&&cached?.domain===config.teamDomain&&Date.now()-cached.at<300000)return cached.keys;const r=await fetch(`https://${config.teamDomain}/cdn-cgi/access/certs`);if(!r.ok)throw Error('No se ha podido validar la sesión.');const data:any=await r.json();if(!Array.isArray(data.keys))throw Error('Claves de sesión no válidas.');cached={domain:config.teamDomain,at:Date.now(),keys:data.keys};return data.keys as JsonWebKey[]}
+ let key=(await keys()).find((k:any)=>k.kid===header.kid);if(!key)key=(await keys(true)).find((k:any)=>k.kid===header.kid);if(!key||key.kty!=='RSA')throw Error('Clave de sesión no válida.');const imported=await crypto.subtle.importKey('jwk',key,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['verify']);if(!await crypto.subtle.verify('RSASSA-PKCS1-v1_5',imported,decode(parts[2]),new TextEncoder().encode(parts[0]+'.'+parts[1])))throw Error('Firma de sesión no válida.');
+ const at=Math.floor(Date.now()/1000);if(typeof payload.exp!=='number'||payload.exp<=at||payload.nbf&&payload.nbf>at+30||payload.iss!==`https://${config.teamDomain}`||!Array.isArray(payload.aud)||!payload.aud.includes(config.audience)||typeof payload.sub!=='string'||typeof payload.email!=='string'||payload.email.toLowerCase()!==config.adminEmail.toLowerCase())throw Error('Sesión caducada o sin permiso para este salón.');return {id:payload.sub,email:payload.email}
+}

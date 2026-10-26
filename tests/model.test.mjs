@@ -1,4 +1,4 @@
-import{test}from'node:test';import assert from'node:assert/strict';import{initial,services,slots,addBooking,validHours,conflicts,today,addDays}from'../dist/model.js';
+import{test}from'node:test';import assert from'node:assert/strict';import{initial,services,slots,addBooking,validHours,conflicts,today,addDays}from'../public/model.js';
 const now=new Date('2026-10-26T07:00:00Z');
 test('service and buffer fit work intervals and never overlap breaks',()=>{const s=initial();const a=slots(s,'2026-10-26',services[0],now);assert(a.includes('10:00'));assert(a.includes('12:45'));assert(!a.includes('13:00'));assert(!a.includes('14:00'));assert(a.includes('17:45'));assert(!a.includes('18:00'))});
 test('booking blocks overlaps, rejects duplicates and cancellation releases slot',()=>{const s=initial();const b=addBooking(s,{date:'2026-10-26',time:'10:00',service:'cut',name:'Test',phone:'000000'},now);assert(!slots(s,b.date,services[0],now).includes('11:00'));assert(slots(s,b.date,services[0],now).includes('11:15'));assert.throws(()=>addBooking(s,{...b},now));b.status='cancelled';assert(slots(s,b.date,services[0],now).includes('10:00'))});
