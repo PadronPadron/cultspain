@@ -11,6 +11,8 @@
 
 El 26/10/2026 el panel indicó una conexión Git desconectada y una última compilación fallida. No se consideran pruebas de publicación ni la compra del dominio ni la vinculación del repositorio.
 
+El 27/10/2026 se completó el despliegue automático desde `main`. Sitio comprobado en `https://cultspain.com` con el perfil de Olga, catálogo sin precios y calendario cargado desde D1. Archivo administrativo publicado con cambio de fecha/hora. API administrativa sin autenticación: 403; disponibilidad pública: sin contactos ni reservas locales de prueba. El sitio sigue indicando reservas de prueba. El inicio de sesión administrativo requiere terminar el alta de Zero Trust y configurar su aplicación. `keep_vars` conserva la configuración de acceso del panel en futuras publicaciones.
+
 ## Preparación antes del primer despliegue
 
 1. R2 activado personalmente por el propietario; el agente no pulsó el botón de suscripción.
