@@ -18,3 +18,10 @@ Pendientes antes del uso real: R2 remoto, integración Git, bindings y Access, c
 - Verificados en navegador los grupos de servicios, la selección de Corte + barba y la consulta de queratina. Sin símbolos monetarios en el sitio público y sin desbordamiento horizontal en escritorio ni a 390 px. Perfil de Olga comprobado visualmente.
 - Migración 0002 aplicada localmente y en D1 remoto sin alterar importes históricos; columna y registro de migraciones verificados en la consola de Cloudflare.
 - Acceso de Cloudflare al repositorio autorizado y guardado; integración Git conectada en el panel del Worker. Pendientes R2, Access y publicación comprobada.
+
+## Cambios de cita y CRM · 27/10/2026
+
+- Integración local: creación automática de cliente con cada reserva, reutilización de la ficha con nombre/apellidos/teléfono coincidentes e historial con dos citas.
+- Cambio de hora y de fecha conserva cliente, servicio, duración e importe sin registrar. Rechaza hueco ocupado, día cerrado y cambio desde una versión obsoleta. Fallo conserva la cita original; traslado y cancelación liberan el horario y quedan auditados.
+- Interfaz Chrome: modal Cambiar fecha y hora, selección de horas libres y guardado de 10:00 a 11:00 comprobados. Datos propios de prueba cancelados y clientes archivados.
+- R2 remoto: bucket UE `cultspain-documents`, Public Access Disabled, binding confirmado. Primera compilación y despliegue de Worker completados; comprobación del dominio y autenticación administrativa pendientes.
