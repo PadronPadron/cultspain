@@ -37,3 +37,11 @@ Pendientes antes del uso real: R2 remoto, integración Git, bindings y Access, c
 
 - Telegram: comprobación real de token con getMe, bot cultspainBot, sin webhook externo. Token cifrado como Secret en el panel. Las respuestas no imprimen credenciales.
 - Botones: 16 pruebas unitarias, TypeScript, pruebas de aprobación/traslado y compilación superadas. Validación de mensaje/chat y pertenencia al grupo; rechazo de una acción basada en estado obsoleto. Prueba real de pulsación en Telegram todavía pendiente.
+
+## Comprobación real de Telegram · 27/10/2026
+
+- Webhook activado y verificado en el grupo CultSpainCitas. Solicitud sin secreto al webhook: 403.
+- Solicitud ficticia de la web creó ficha CRM y aviso enviado (ID de mensaje registrado). El propietario pulsó Confirmar cita en el grupo; CRM pasó a Confirmada y D1 registró el actor Telegram member.
+- La cita de prueba fue cancelada desde el formulario de la administración; D1 confirmó estado cancelled y la auditoría de confirmación anterior conservada. Clientes de las dos pruebas propias archivados de forma recuperable y auditada, sin borrar citas ni modificar clientes reales.
+- La lista de citas se actualiza automáticamente cada 15 segundos cuando está visible y no hay formulario activo, con botón Actualizar. El mensaje del bot se actualiza al estado final tras pulsar una acción.
+- 16 pruebas unitarias, integración D1 de aprobación y traslado, TypeScript y compilación superados. Las migraciones 0000–0004 están aplicadas en local y D1 remoto.

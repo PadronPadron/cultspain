@@ -63,7 +63,7 @@ Token de @cultspainBot guardado como secreto `TELEGRAM_BOT_TOKEN` en Cloudflare,
 
 `notifications` guarda avisos en la misma transacción de la cita. Intento inmediato y tarea programada cada cinco minutos; reintentos con espera progresiva y botón manual. Error de Telegram no elimina la solicitud. Semántica al menos una vez: un timeout después de entregar puede producir repetición, por lo que el aviso conserva referencia de cita. Los avisos contienen servicio, fecha, hora y enlace a la administración; no contienen nombre, teléfono ni email del cliente. El cliente recibe respuesta en la web; la confirmación del salón se gestiona con el cliente por su canal habitual.
 
-Migración 0003 aplicada en local y D1 remoto; registro verificado el 27/10/2026. Envío real pendiente de vincular y comprobar el grupo.
+Migración 0003 aplicada en local y D1 remoto; registro verificado el 27/10/2026. Envío real comprobado en CultSpainCitas.
 
 API utilizada según la [documentación oficial de Telegram](https://core.telegram.org/bots/api): sendMessage, getMe, getUpdates y getWebhookInfo.
 
@@ -73,4 +73,4 @@ Con autorización del propietario, cualquier miembro actual del grupo vinculado 
 
 Webhook: `/api/telegram/webhook`. Se activa desde Avisos Telegram tras verificar el grupo. El secreto se genera en el servidor y se guarda en D1, sin devolverlo al navegador. Un webhook externo ya existente no se sustituye. La pertenencia debe poder verificarse por Telegram; si no se puede comprobar, no se cambia la cita. El bot puede necesitar ser administrador del grupo para que Telegram garantice esta comprobación.
 
-Migración 0004 aplicada en local y D1 remoto; columna y registro de migración verificados. Añade el identificador del mensaje original a la cola de avisos y mantiene registros anteriores. Pendiente de prueba real de botones antes de dar la integración por terminada.
+Migración 0004 aplicada en local y D1 remoto; columna y registro de migración verificados. Añade el identificador del mensaje original a la cola de avisos y mantiene registros anteriores. Prueba real completada: el propietario confirmó una solicitud desde Telegram, el estado cambió en CRM y el actor quedó registrado. Solicitud de prueba cancelada después, sin borrar el historial.

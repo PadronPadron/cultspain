@@ -2,7 +2,7 @@ import {env} from 'cloudflare:workers';
 import {one,stmt} from './store';
 import {changeBooking} from './booking-actions';
 import {InputError} from './accounting';
-import {telegramCall,pairFromUpdates,callbackAuthorized,activeGroupMember} from './telegram-core';
+import {telegramCall,pairFromUpdates,callbackAuthorized,activeGroupMember,notificationMessage} from './telegram-core';
 function equal(a:string,b:string){let diff=a.length^b.length;for(let i=0;i<Math.max(a.length,b.length);i++)diff|=(a.charCodeAt(i)||0)^(b.charCodeAt(i)||0);return diff===0}
 export async function handleTelegramWebhook(request:Request){
  const stored=(await one("SELECT value FROM settings WHERE key='telegram_webhook_secret'"))?.value||'';
@@ -22,6 +22,6 @@ export async function handleTelegramWebhook(request:Request){
  const original=JSON.parse(notice.payload);if(original.date!==current.date||original.time!==current.time)return reply('La fecha u hora cambió. Utiliza el aviso más reciente.');
  try{await changeBooking(match[2],{action:match[1]==='c'?'confirm':'cancel',expectedDate:original.date,expectedTime:original.time,expectedStatus:'pending',reason:'Acción de un miembro del grupo desde Telegram.'},'telegram:'+q.from.id,false)}catch(error){return reply(error instanceof InputError?error.message:'No se pudo guardar el cambio. Revisa la administración.');}
  const response=await reply(match[1]==='c'?'Cita confirmada y guardada en CRM.':'Solicitud rechazada. Horario liberado.');
- try{if(env.TELEGRAM_BOT_TOKEN)await telegramCall(env.TELEGRAM_BOT_TOKEN,'editMessageReplyMarkup',{chat_id:chat,message_id:q.message.message_id,reply_markup:{inline_keyboard:[[{text:'Abrir administración',url:'https://cultspain.com/admin#bookings'}]]}})}catch{}
+ try{if(env.TELEGRAM_BOT_TOKEN)await telegramCall(env.TELEGRAM_BOT_TOKEN,'editMessageText',{chat_id:chat,message_id:q.message.message_id,...notificationMessage({...original,event:match[1]==='c'?'confirm':'cancel',pending:false})})}catch{}
  return response;
 }
