@@ -1,0 +1,1 @@
+ALTER TABLE `bookings` ADD `price_confirmed` integer DEFAULT 1 NOT NULL;

@@ -26,9 +26,9 @@ Los registros se guardan en D1 local y los archivos en R2 local, dentro de `.wra
 - Documentos: originales PDF/JPEG/PNG/WebP de hasta 10 MB, relación con cliente/proveedor/pedido/gasto, datos editables, descarga, archivo recuperable y SHA-256. No hay borrado físico desde la interfaz.
 - Exportación para asesoría: gastos CSV, clientes CSV, catálogos, pedidos, metadatos, historial y originales en ZIP. El periodo filtra por fecha del gasto o documento; el archivo de gastos incluye archivados para revisar la historia.
 - Reservas: servicio, calendario, hora, nombre, apellidos, teléfono y email opcional. La base impide citas solapadas incluso con peticiones simultáneas. Los cambios de horario comprueban conflictos.
-- Cobros: solo marcas manuales del pago en el salón. Sin pasarela de pago ni anticipos online.
+- Cobros: se introduce manualmente el importe realmente recibido en el salón, sin tarifas automáticas en las nuevas reservas. Las operaciones históricas conservan sus importes. Sin pasarela de pago ni anticipos online.
 
-Servicios, precios y horarios siguen siendo ejemplos pendientes de aprobación. La gestión fiscal y el envío a la AEAT no están automatizados. Ver [CONTABILIDAD](docs/CONTABILIDAD.md).
+El catálogo público no contiene precios. Los cortes de mujer y hombre y el servicio Corte + barba reservan 60 minutos; otros tiempos son orientativos. Queratina, alisado químico y corrección de color reservan una consulta previa de 30 minutos. El perfil de Olga Shyshko indica experiencia desde 2017 y formación oficial en Galicia, según los datos facilitados por la propietaria. Los horarios siguen pendientes de aprobación. La gestión fiscal y el envío a la AEAT no están automatizados. Ver [CONTABILIDAD](docs/CONTABILIDAD.md).
 
 ## Cloudflare
 

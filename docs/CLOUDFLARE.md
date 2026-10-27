@@ -20,7 +20,7 @@ El 26/10/2026 el panel indicó una conexión Git desconectada y una última comp
 5. Comandos ya guardados en el panel. Build command: `npm run build:cloudflare`. Deploy command: `npm run deploy:cloudflare`. Root directory: `/`. Worker: `cultspain`.
 6. Configurar Cloudflare Access para `/admin.html` y `/api/admin/*` como rutas de una aplicación de acceso restringida a la propietaria. Las rutas públicas `/api/availability` y `/api/bookings` permanecen disponibles para reservas.
 7. Configurar en las variables de ejecución `CF_ACCESS_TEAM_DOMAIN` (sin https), `CF_ACCESS_AUD` y `ADMIN_EMAIL`. Nunca poner secretos o sesiones en el repositorio.
-8. Antes de activar uso real, confirmar servicios, precios, horario, datos de contacto, avisos y política de privacidad; revisar protección antiabuso de la reserva pública, copias de seguridad y sistema fiscal con la asesoría.
+8. Antes de activar uso real, confirmar servicios, duraciones, horario, datos de contacto, avisos y política de privacidad; revisar protección antiabuso de la reserva pública, copias de seguridad y sistema fiscal con la asesoría.
 
 El backend comprueba criptográficamente firma, emisor, audiencia, expiración y email de los JWT de Access. Sin configuración válida rechaza el acceso administrativo. El acceso local sin login solo existe en desarrollo sobre loopback. Una cabecera con un nombre o email por sí sola no concede permisos.
 
@@ -44,3 +44,7 @@ Añadir cambios en `db/schema.ts` y ejecutar `npm run db:generate`. Revisar el S
 ## Referencias
 
 [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/), [configuración Wrangler](https://developers.cloudflare.com/workers/wrangler/configuration/), [validación del token Access](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/authorization-cookie/application-token/).
+
+## Catálogo sin precios · 27/10/2026
+
+La migración `0002_steady_infant_terrible.sql` diferencia las nuevas reservas sin importe de las operaciones históricas. Aplicada localmente; pendiente de aplicación remota antes de desplegar esta versión. No modifica importes ni borra registros anteriores. El catálogo público no tiene precios. Los cobros se registran manualmente en el salón.
