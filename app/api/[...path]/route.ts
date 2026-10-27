@@ -3,8 +3,10 @@ import{InputError,text,required,cents,date,email,totals,sniffFile,quantity}from'
 import{admin,sameOrigin,database,stmt,all,one,auditStmt,camel,now,id,revisionBatch,calendarVersion,calendarBatch}from'../../../lib/store';
 // @ts-ignore Shared pure scheduling rules; no browser APIs are called by these functions.
 import{initial,services,slots,conflicts,validHours,min,today}from'../../../public/model.js';
+import {changeBooking} from '../../../lib/booking-actions';
+import {handleTelegramWebhook} from '../../../lib/telegram-webhook';
 import {TelegramError} from '../../../lib/telegram-core';
-import {notificationStmt,flushTelegram,telegramStatus,beginTelegramPair,connectTelegram} from '../../../lib/telegram';
+import {notificationStmt,flushTelegram,telegramStatus,beginTelegramPair,connectTelegram,enableTelegramWebhook} from '../../../lib/telegram';
 export const dynamic='force-dynamic';
 const json=(data:any,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const resources=['clients','suppliers','materials','expenses','orders'];
@@ -39,10 +41,11 @@ async function upload(request:Request,actor:string){
 }
 async function handler(request:Request){
  const u=new URL(request.url),parts=u.pathname.replace(/^\/api\/?/,'').split('/').filter(Boolean),[type,key,action]=parts[0]==='admin'?parts.slice(1):parts;const isAdminPath=parts[0]==='admin';const method=request.method;if(method!=='GET')sameOrigin(request);
+ if(!isAdminPath&&method==='POST'&&type==='telegram'&&key==='webhook')return await handleTelegramWebhook(request);
  if(!isAdminPath&&method==='GET'&&type==='availability'){const s=await schedulingState();return json({mode:import.meta.env.DEV?'local':'cloudflare',week:s.week,exceptions:s.exceptions,bookings:s.bookings.filter((b:any)=>b.status!=='cancelled').map((b:any)=>({date:b.date,time:b.time,duration:b.duration,status:b.status}))})}
  if(!isAdminPath&&method==='POST'&&type==='bookings'&&!key){const b:any=await request.json(),service=services.find((s:any)=>s.id===b.service);if(!service)throw new InputError('Selecciona un servicio.');const day=date(b.date),time=required(b.time,'Hora',5),firstName=required(b.firstName||b.name,'Nombre',100),lastName=text(b.lastName,100),phone=required(b.phone,'Teléfono',30),mail=email(b.email);if(!/^[+0-9 ()-]{6,30}$/.test(phone))throw new InputError('Revisa el teléfono.');const version=await calendarVersion();const s=await schedulingState();if(!slots(s,day,service).includes(time))throw new InputError('Este horario ya está ocupado. Elige otro.',409);const matches=(await all('SELECT id,first_name,last_name,phone FROM clients WHERE archived=0')).filter((c:any)=>c.phone.replace(/\D/g,'')===phone.replace(/\D/g,'')&&c.first_name.trim().toLowerCase()===firstName.toLowerCase()&&c.last_name.trim().toLowerCase()===lastName.toLowerCase());const existing=matches.length===1?matches[0]:null;const stamp=now(),recordId=id(),clientId=existing?.id||id();const commands=[...(!existing?[stmt('INSERT INTO clients(id,created_at,updated_at,first_name,last_name,phone,email) VALUES(?,?,?,?,?,?,?)',[clientId,stamp,stamp,firstName,lastName,phone,mail])]:[]),stmt('INSERT INTO bookings(id,client_id,date,time,service,duration,price_cents,price_confirmed,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)',[recordId,clientId,day,time,service.id,service.duration,0,0,'pending',stamp])];for(let n=min(time);n<min(time)+service.duration+15;n++)commands.push(stmt('INSERT INTO booking_minutes(key,booking_id) VALUES(?,?)',[day+'|'+n,recordId]));commands.push(notificationStmt(recordId,'request',day,time,service.id));commands.push(auditStmt('booking-form','bookings',recordId,'create',null,{date:day,time,service:service.id}));try{await calendarBatch(version,commands)}catch(e){if(String(e).includes('UNIQUE'))throw new InputError('Este horario ya está ocupado. Elige otro.',409);throw e}try{await flushTelegram(1)}catch{}return json({id:recordId,date:day,time,service:service.id,status:'pending'},201)}
  if(!isAdminPath)throw new InputError('Ruta no encontrada.',404);const actor=await admin(request);
- if(type==='telegram'&&method==='POST'){if(key==='pair')return json(await beginTelegramPair(actor));if(key==='connect')return json(await connectTelegram(actor));if(key==='retry'){const status=await telegramStatus();if(!status.tokenSet||!status.connected)throw new InputError('Vincula primero el bot y el grupo.',503);await stmt("UPDATE notifications SET next_attempt_at=? WHERE status='pending'",[now()]).run();return json(await flushTelegram(10))}}
+ if(type==='telegram'&&method==='POST'){if(key==='pair')return json(await beginTelegramPair(actor));if(key==='connect')return json(await connectTelegram(actor));if(key==='webhook')return json(await enableTelegramWebhook(actor));if(key==='retry'){const status=await telegramStatus();if(!status.tokenSet||!status.connected)throw new InputError('Vincula primero el bot y el grupo.',503);await stmt("UPDATE notifications SET next_attempt_at=? WHERE status='pending'",[now()]).run();return json(await flushTelegram(10))}}
  if(method==='GET'&&type==='state')return json(await state());
  if(method==='GET'&&type==='audit')return json((await all('SELECT * FROM audit_log ORDER BY at DESC LIMIT 10000')).map(camel));
  if(method==='GET'&&type==='documents'&&key){const d=await one('SELECT * FROM documents WHERE id=?',[key]);if(!d)throw new InputError('No se ha encontrado el documento.',404);const object=await env.BUCKET?.get(d.object_key);if(!object)throw new InputError('No se ha encontrado el archivo en el almacenamiento.',404);return new Response(object.body,{headers:{'Content-Type':d.mime,'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(d.name)}`,'X-Content-Type-Options':'nosniff','Cache-Control':'private, no-store','Content-Security-Policy':"default-src 'none'; sandbox"}})}
@@ -51,26 +54,7 @@ async function handler(request:Request){
  if((method==='POST'||method==='PUT')&&resources.includes(type)){const b:any=await request.json();if(method==='PUT'&&!key)throw new InputError('Falta el ID.');return json(await putResource(type,key,b,actor),method==='POST'?201:200)}
  if(method==='PUT'&&type==='schedule'){const version=await calendarVersion();const b:any=await request.json();if(!Array.isArray(b.week)||b.week.length!==7||b.week.some((c:any)=>!validHours(c)))throw new InputError('Revisa el horario semanal.');if(!b.exceptions||typeof b.exceptions!=='object'||Object.keys(b.exceptions).length>1000)throw new InputError('Excepciones no válidas.');for(const [d,c]of Object.entries(b.exceptions)){date(d);if(!validHours(c))throw new InputError('Revisa las horas de la excepción.')}const old=await schedule(),s={...b,bookings:await bookingData()};const affected=conflicts(s);if(affected.length)throw new InputError(`El nuevo horario afecta a ${affected.length} citas. Ajusta las horas o cancela esas citas primero.`,409);await calendarBatch(version,[stmt("INSERT INTO settings(key,value) VALUES('schedule',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",[JSON.stringify({week:b.week,exceptions:b.exceptions})]),auditStmt(actor,'settings','schedule','update',old,b)]);return json({ok:true})}
  if(method==='PUT'&&type==='bookings'&&key){
-  const version=await calendarVersion(),b:any=await request.json(),old=await one('SELECT * FROM bookings WHERE id=?',[key]);
-  if(!old)throw new InputError('No se ha encontrado el registro.',404);
-  const commands:any[]=[];b.reason=text(b.reason,1000);
-  if(b.action==='reschedule'&&['pending','confirmed'].includes(old.status)){
-   if(b.expectedDate!==old.date||b.expectedTime!==old.time)throw new InputError('La cita ha cambiado. Actualiza la página antes de moverla.',409);
-   const day=date(b.date),time=required(b.time,'Hora',5),s=await schedulingState();
-   s.bookings=s.bookings.filter((x:any)=>x.id!==key);
-   if(!slots(s,day,{duration:old.duration}).includes(time))throw new InputError('Este horario no está disponible. Elige otra fecha u hora.',409);
-   commands.push(stmt('DELETE FROM booking_minutes WHERE booking_id=?',[key]),stmt('UPDATE bookings SET date=?,time=? WHERE id=?',[day,time,key]));
-   for(let n=min(time);n<min(time)+old.duration+15;n++)commands.push(stmt('INSERT INTO booking_minutes(key,booking_id) VALUES(?,?)',[day+'|'+n,key]));
-  }else if(b.action==='confirm'&&old.status==='pending'){if(old.date<today())throw new InputError('La fecha ya ha pasado. Cambia primero la cita.',409);commands.push(stmt("UPDATE bookings SET status='confirmed' WHERE id=?",[key]));}
-  else if(b.action==='complete'&&old.status==='confirmed')commands.push(stmt("UPDATE bookings SET status='completed' WHERE id=?",[key]));
-  else if(b.action==='cancel'&&['pending','confirmed'].includes(old.status))commands.push(stmt("UPDATE bookings SET status='cancelled' WHERE id=?",[key]),stmt('DELETE FROM booking_minutes WHERE booking_id=?',[key]));
-  else if(b.action==='pay'&&old.status==='completed'&&old.paid_cents===0){const amount=cents(b.paidCents);if(amount===0)throw new InputError('Introduce el importe realmente recibido.');commands.push(stmt('UPDATE bookings SET price_cents=?,price_confirmed=1,paid_cents=?,paid_date=? WHERE id=?',[amount,amount,date(b.date),key]));}
-  else throw new InputError('Esta acción ya se ha realizado o no está disponible.',409);
-  if(['confirm','reschedule','cancel'].includes(b.action))commands.push(notificationStmt(key,b.action,b.action==='reschedule'?b.date:old.date,b.action==='reschedule'?b.time:old.time,old.service));
-  commands.push(auditStmt(actor,'bookings',key,b.action,old,b));
-  try{await calendarBatch(version,commands)}catch(e){if(String(e).includes('UNIQUE'))throw new InputError('Este horario ya está ocupado. Elige otro.',409);throw e}
-  try{await flushTelegram(1)}catch{}
-  return json({id:key})
+  return json(await changeBooking(key,await request.json(),actor))
  }
  throw new InputError('Ruta no encontrada.',404)
 }

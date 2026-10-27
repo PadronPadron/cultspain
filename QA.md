@@ -34,3 +34,6 @@ Pendientes antes del uso real: R2 remoto, integración Git, bindings y Access, c
 - 15 pruebas unitarias superadas, integración de aprobación y traslado superada, TypeScript y compilación superados antes de añadir el evento programado.
 - Solicitud nueva en estado pendiente: bloquea el horario, no permite completar sin aprobación, la propietaria confirma y queda auditoría; aprobación duplicada rechazada. Cancelación libera horario.
 - Cola de avisos guardada junto a cada cambio. Sin bot configurado conserva los avisos. Pruebas del API Telegram con transporte simulado: errores no contienen el token y la vinculación solo acepta un comando exacto y reciente dentro de un grupo. Envío real pendiente de vincular el grupo.
+
+- Telegram: comprobación real de token con getMe, bot cultspainBot, sin webhook externo. Token cifrado como Secret en el panel. Las respuestas no imprimen credenciales.
+- Botones: 16 pruebas unitarias, TypeScript, pruebas de aprobación/traslado y compilación superadas. Validación de mensaje/chat y pertenencia al grupo; rechazo de una acción basada en estado obsoleto. Prueba real de pulsación en Telegram todavía pendiente.

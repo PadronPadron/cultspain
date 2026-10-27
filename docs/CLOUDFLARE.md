@@ -66,3 +66,11 @@ Token de @cultspainBot guardado como secreto `TELEGRAM_BOT_TOKEN` en Cloudflare,
 Migración 0003 aplicada en local y D1 remoto; registro verificado el 27/10/2026. Envío real pendiente de vincular y comprobar el grupo.
 
 API utilizada según la [documentación oficial de Telegram](https://core.telegram.org/bots/api): sendMessage, getMe, getUpdates y getWebhookInfo.
+
+## Botones de Telegram · miembros del grupo
+
+Con autorización del propietario, cualquier miembro actual del grupo vinculado puede confirmar o rechazar una solicitud pendiente. No se restringe a un único usuario de Telegram. Se comprueban el secreto de webhook, el chat de origen, el mensaje emitido por el bot y la pertenencia actual con getChatMember. Se rechazan miembros expulsados o que hayan salido, mensajes reenviados a otro chat, botones de una fecha anterior y solicitudes ya gestionadas. El guardado de estado y auditoría comparte las mismas transacciones que la administración.
+
+Webhook: `/api/telegram/webhook`. Se activa desde Avisos Telegram tras verificar el grupo. El secreto se genera en el servidor y se guarda en D1, sin devolverlo al navegador. Un webhook externo ya existente no se sustituye. La pertenencia debe poder verificarse por Telegram; si no se puede comprobar, no se cambia la cita. El bot puede necesitar ser administrador del grupo para que Telegram garantice esta comprobación.
+
+Migración 0004 aplicada en local y D1 remoto; columna y registro de migración verificados. Añade el identificador del mensaje original a la cola de avisos y mantiene registros anteriores. Pendiente de prueba real de botones antes de dar la integración por terminada.
