@@ -3,6 +3,7 @@ import{InputError,text,required,cents,date,email,totals,sniffFile,quantity}from'
 import{admin,sameOrigin,database,stmt,all,one,auditStmt,camel,now,id,revisionBatch,calendarVersion,calendarBatch}from'../../../lib/store';
 // @ts-ignore Shared pure scheduling rules; no browser APIs are called by these functions.
 import{initial,services,slots,conflicts,validHours,min,today}from'../../../public/model.js';
+import {TelegramError} from '../../../lib/telegram-core';
 import {notificationStmt,flushTelegram,telegramStatus,beginTelegramPair,connectTelegram} from '../../../lib/telegram';
 export const dynamic='force-dynamic';
 const json=(data:any,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -73,5 +74,5 @@ async function handler(request:Request){
  }
  throw new InputError('Ruta no encontrada.',404)
 }
-async function safe(r:Request){try{return await handler(r)}catch(e:any){console.error(e instanceof InputError?e.message:e);return json({error:e instanceof InputError?e.message:'No se ha podido completar la operación. Los datos no se han guardado.'},e instanceof InputError?e.status:500)}}
+async function safe(r:Request){try{return await handler(r)}catch(e:any){if(e instanceof TelegramError)return json({error:e.message},503);console.error(e instanceof InputError?e.message:e);return json({error:e instanceof InputError?e.message:'No se ha podido completar la operación. Los datos no se han guardado.'},e instanceof InputError?e.status:500)}}
 export const GET=safe;export const POST=safe;export const PUT=safe;
