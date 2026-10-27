@@ -1,3 +1,6 @@
+.mobile-table-label,.mobile-record-summary,.mobile-record-manage{display:none}
+.record-docs-heading{margin-top:24px}.record-documents{display:grid;gap:8px}.record-documents a{white-space:normal;overflow-wrap:anywhere}
+.finance-entry-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:24px}.finance-entry-actions .button{min-height:48px}
 /* Phone layouts preserve the studio's monochrome typography and depth. */
 [hidden]{display:none!important}
 .menu-toggle,.mobile-menu,.booking-steps,.mobile-booking-manage,.admin-section-picker{display:none}
@@ -173,6 +176,28 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .order-line button{min-height:48px}
   .period-label{flex:1 1 120px;min-width:0}
   .period-label input{width:100%}
+  .finance-table-scroll:before{display:none}
+  .finance-record-table{width:100%;min-width:0;table-layout:fixed}
+  .finance-record-table th,.finance-record-table td{white-space:normal;overflow-wrap:anywhere;padding:14px 10px;vertical-align:top}
+  .finance-record-table td small{white-space:normal;overflow-wrap:anywhere}
+  .finance-record-table th:first-child,.finance-record-table td:first-child{width:62%}
+  .finance-record-table[data-record-type=incomes] th:not(:first-child):not(:nth-child(4)),.finance-record-table[data-record-type=incomes] td:not(:first-child):not(:nth-child(4)),.finance-record-table[data-record-type=expenses] th:not(:first-child):not(:nth-child(6)),.finance-record-table[data-record-type=expenses] td:not(:first-child):not(:nth-child(6)){display:none}
+  .finance-record-table[data-record-type=materials] th:not(:first-child):not(:last-child),.finance-record-table[data-record-type=materials] td:not(:first-child):not(:last-child),.finance-record-table[data-record-type=suppliers] th:not(:first-child):not(:last-child),.finance-record-table[data-record-type=suppliers] td:not(:first-child):not(:last-child),.finance-record-table[data-record-type=orders] th:not(:first-child):not(:last-child),.finance-record-table[data-record-type=orders] td:not(:first-child):not(:last-child),.finance-record-table[data-record-type=documents] th:not(:first-child):not(:last-child),.finance-record-table[data-record-type=documents] td:not(:first-child):not(:last-child){display:none}
+  .finance-record-table:not([data-record-type=incomes]):not([data-record-type=expenses]) td:last-child>:not(.mobile-record-manage){display:none}
+  .detail-line strong{min-width:0;max-width:60%;overflow-wrap:anywhere;text-align:right}
+  .booking-manage-actions a{display:flex;align-items:center;justify-content:center;min-height:48px;font-size:14px;white-space:normal}
+  .finance-record-table td:first-child{font-size:12px;color:#bbb}
+  .finance-record-table td strong{font-size:15px;color:#eee}
+  .finance-record-table .mobile-record-summary{display:block;font-size:14px;color:#eee;margin-top:7px;line-height:1.5}
+  .finance-record-table small.mobile-record-summary{font-size:11px;color:#bbb}
+  .finance-record-table .mobile-record-manage{display:block;margin-top:12px;min-height:44px;max-width:100%;padding:8px 10px;font-size:12px}
+  .finance-record-table.is-empty thead{display:none}
+  .finance-record-table.is-empty,.finance-record-table.is-empty tbody,.finance-record-table.is-empty tr,.finance-record-table.is-empty td{display:block;width:100%;max-width:none}
+  .finance-record-table.is-empty td{padding:24px 16px;font-size:13px}
+  .admin-body .finance-record-table .mobile-record-manage{margin:12px 0 0;min-height:44px}
+  .finance-record-table .desktop-table-label{display:none}
+  .finance-record-table .mobile-table-label{display:inline}
+  .finance-entry-actions .button{flex:1 1 130px;font-size:14px;padding:12px}
   .finance-total{font-size:14px;gap:12px;flex-wrap:wrap}
   #admin-feedback{right:12px;left:12px;bottom:12px;max-width:none}
   #admin-feedback:not(:empty){font-size:14px;padding:14px 16px}

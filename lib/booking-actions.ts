@@ -1,5 +1,5 @@
 import {InputError,text,required,cents,date} from './accounting';
-import {calendarVersion,one,stmt,calendarBatch,auditStmt,all} from './store';
+import {calendarVersion,one,stmt,calendarBatch,auditStmt,all,id,now} from './store';
 import {notificationStmt,flushTelegram} from './telegram';
 // @ts-ignore Shared scheduling rules.
 import {slots,min,today,initial} from '../public/model.js';
@@ -19,7 +19,7 @@ export async function changeBooking(key:string,b:any,actor:string,notifyNow=true
   }else if(b.action==='confirm'&&old.status==='pending'){if(old.date<today())throw new InputError('La fecha ya ha pasado. Cambia primero la cita.',409);commands.push(stmt("UPDATE bookings SET status='confirmed' WHERE id=?",[key]));}
   else if(b.action==='complete'&&old.status==='confirmed')commands.push(stmt("UPDATE bookings SET status='completed' WHERE id=?",[key]));
   else if(b.action==='cancel'&&['pending','confirmed'].includes(old.status))commands.push(stmt("UPDATE bookings SET status='cancelled' WHERE id=?",[key]),stmt('DELETE FROM booking_minutes WHERE booking_id=?',[key]));
-  else if(b.action==='pay'&&old.status==='completed'&&old.paid_cents===0){const amount=cents(b.paidCents);if(amount===0)throw new InputError('Introduce el importe realmente recibido.');commands.push(stmt('UPDATE bookings SET price_cents=?,price_confirmed=1,paid_cents=?,paid_date=? WHERE id=?',[amount,amount,date(b.date),key]));}
+  else if(b.action==='pay'&&old.status==='completed'&&old.paid_cents===0){if(await one('SELECT id FROM incomes WHERE booking_id=?',[key]))throw new InputError('La cita ya tiene un cobro registrado. Edita o restaura ese ingreso en Finanzas.',409);const amount=cents(b.paidCents);if(amount===0)throw new InputError('Introduce el importe realmente recibido.');commands.push(stmt('UPDATE bookings SET price_cents=?,price_confirmed=1,paid_cents=?,paid_date=? WHERE id=?',[amount,amount,date(b.date),key]),stmt("INSERT INTO incomes(id,created_at,updated_at,date,category,description,client_id,booking_id,amount_cents,payment_method) VALUES(?,?,?,?,?,?,?,?,?,?)",[id(),now(),now(),date(b.date),'Servicios','Cobro de cita',old.client_id,key,amount,'other']));}
   else throw new InputError('Esta acción ya se ha realizado o no está disponible.',409);
   if(['confirm','reschedule','cancel'].includes(b.action))commands.push(notificationStmt(key,b.action,b.action==='reschedule'?b.date:old.date,b.action==='reschedule'?b.time:old.time,old.service,old.status==='pending'&&b.action==='reschedule'));
   commands.push(auditStmt(actor,'bookings',key,b.action,old,b));

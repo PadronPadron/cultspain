@@ -56,3 +56,20 @@ Pendientes antes del uso real: R2 remoto, integración Git, bindings y Access, c
 - Selector móvil de las diez secciones, acción Gestionar junto a la fecha, formularios de gastos/materiales/proveedores/pedidos/documentos a 320 px, sin campos fuera del diálogo. Se conserva la navegación de escritorio.
 - Servidor QA aislado simuló HTTP 503 para disponibilidad: menú y catálogo funcionaron, calendario y envío permanecieron desactivados. Reintentar calendario recuperó los huecos reales al restaurar el API.
 - TypeScript, 17 pruebas unitarias, integración D1 de CRM/traslado/conflictos/cancelación y compilación Cloudflare superados. Pruebas de reserva realizadas en local, sin mensajes Telegram de producción.
+
+## Ingresos y gastos · 27/10/2026
+
+- Añadir ingreso y Añadir gasto visibles juntos al principio de Finanzas; el indicador de ingresos abre el formulario. Comprobado en Chrome a 320 y 390 px, sin desbordamiento, campos de 16 px.
+- Registro D1 de ingresos con fecha, concepto, categoría, importe recibido, forma de cobro, cliente opcional, número de documento y notas. Edición, archivo/restauración con motivo, revisión de concurrencia e historial; documentos originales vinculados en R2.
+- Cada cobro de una cita tiene una sola entrada de ingresos. La migración incorpora cobros anteriores; los nuevos se guardan atómicamente con la cita. Corregir, archivar o restaurar un ingreso sincroniza el cobro de la cita. Se impide registrar otro cobro mientras existe un ingreso previo.
+- Totales por fecha de cobro/pago, ingresos excluyendo archivados y saldo del periodo. Las salidas incluyen gastos pagados en el periodo aunque el documento tenga otra fecha. CRM y resumen incluyen cobros manuales.
+- Integración local: altas y correcciones, rechazo de cero/decimales de céntimos/fecha/método/cliente inválidos, versión obsoleta, archivo/restauración auditados, PDF adjunto y descargado, cobros desde citas y desde Finanzas, duplicados rechazados y sincronización comprobados. Pruebas propias archivadas y huecos sintéticos liberados.
+- Interfaz: ingreso local 18,50 €, corrección a 20,00 €, archivo, indicador clicable y botón de gastos comprobados. CSV descargado y ZIP para asesoría contienen el ingreso corregido/archivado y sus originales. No se crearon cobros de prueba en producción.
+- TypeScript, 17 pruebas unitarias, integraciones de ingresos/aprobación/traslado y compilación Cloudflare superados. Migración histórica probada también en SQLite aislado: fecha/importe conservados y cita única.
+
+### Таблицы бухгалтерии на мобильном / Tablas de contabilidad móvil
+
+- Ingresos, gastos, materiales, proveedores, pedidos y documentos: dos columnas en móvil y acceso Gestionar a todos los campos y acciones. No se elimina ningún dato; escritorio mantiene 6 u 8 columnas.
+- Verificados 320, 375, 390, 430, 768 y 844 px: ancho del documento igual al viewport, tablas completas sin desplazamiento horizontal. Escritorio 1280 px conserva todas las columnas, con desplazamiento dentro de tablas extensas.
+- A 320 px, detalles de las seis clases de registro y formularios caben dentro del diálogo; proveedores largos y SHA-256 se ajustan al ancho. Archivo/restauración mediante formulario, sin depender de confirmaciones nativas del navegador. Tabla vacía muestra un mensaje a ancho completo.
+- Cloudflare D1: tabla incomes, 15 columnas, índices de fecha y cita única y migración 0005 registrados. Punto de recuperación previo obtenido; no se crearon cobros ficticios en producción.
