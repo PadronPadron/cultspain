@@ -15,5 +15,6 @@ Pendientes antes del uso real: R2 remoto, integración Git, bindings y Access, c
 
 - 12 pruebas unitarias y comprobación TypeScript superadas.
 - Prueba API específica: Corte + barba reserva 60 min y queratina reserva una consulta de 30 min, sin importe; se ignoran importes y duraciones enviados por el cliente. Citas de prueba canceladas y sus clientes archivados.
-- Verificados en navegador los grupos de servicios, la selección de Corte + barba y la consulta de queratina. Sin símbolos monetarios en el sitio público y sin desbordamiento horizontal en escritorio.
-- Migración 0002 aplicada localmente sin alterar importes históricos.
+- Verificados en navegador los grupos de servicios, la selección de Corte + barba y la consulta de queratina. Sin símbolos monetarios en el sitio público y sin desbordamiento horizontal en escritorio ni a 390 px. Perfil de Olga comprobado visualmente.
+- Migración 0002 aplicada localmente y en D1 remoto sin alterar importes históricos; columna y registro de migraciones verificados en la consola de Cloudflare.
+- Acceso de Cloudflare al repositorio autorizado y guardado; integración Git conectada en el panel del Worker. Pendientes R2, Access y publicación comprobada.
