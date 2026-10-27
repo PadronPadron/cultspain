@@ -6,7 +6,7 @@ const groupButtons=selected=>serviceGroups.map(g=>`<button type="button" data-gr
 function renderCatalogue(){
  $('#service-groups').innerHTML=groupButtons(catalogueGroup);
  $('#group-description').textContent=serviceGroups.find(g=>g.id===catalogueGroup).description;
- $('#service-list').innerHTML=services.filter(s=>s.group===catalogueGroup).map((s,i)=>`<div class="service-row"><span>${String(i+1).padStart(2,'0')}</span><div><h3>${esc(s.name)}</h3><p>${esc(s.description)}</p><small class="service-time">${esc(serviceTiming(s))}</small></div><button data-service="${s.id}" aria-label="Elegir ${esc(serviceLabel(s))}">↗</button></div>`).join('');
+ $('#service-list').innerHTML=services.filter(s=>s.group===catalogueGroup).map((s,i)=>`<div class="service-row"><span>${String(i+1).padStart(2,'0')}</span><div><h3>${esc(s.name)}</h3><p>${esc(s.description)}</p><small class="service-time">${esc(serviceTiming(s))}</small></div><button data-service="${s.id}" aria-label="Elegir ${esc(serviceLabel(s))}">Reservar</button></div>`).join('');
 }
 function chooseService(id,scroll=false){const service=services.find(s=>s.id===id);if(!service)return;selectedService=service;bookingGroup=service.group;selectedTime='';selectedDate='';firstAvailable();render();if(scroll)$('#reserva').scrollIntoView({behavior:'smooth'})}
 function firstAvailable(){for(let i=0;i<=90;i++){const d=addDays(today(),i);if(slots(state,d,selectedService).length){selectedDate=d;month=d.slice(0,7);return}}}
