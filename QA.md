@@ -47,3 +47,12 @@ Pendientes antes del uso real: R2 remoto, integración Git, bindings y Access, c
 - 16 pruebas unitarias, integración D1 de aprobación y traslado, TypeScript y compilación superados. Las migraciones 0000–0004 están aplicadas en local y D1 remoto.
 
 - La cola descarta avisos cuyo estado, fecha u hora ya fueron sustituidos, para no enviar una confirmación antigua después de cancelar. 17 pruebas unitarias incluidas estas transiciones.
+
+## Revisión móvil · 27/10/2026
+
+- Chrome con viewport 320×667, 375×667, 390×844, 430×932, 768×1024 y 844×390; comparación escritorio 1280×800. Sin desbordamiento ni recorte lateral de los descendientes del contenido público. Administración sin desbordamiento del documento; las tablas conservan desplazamiento horizontal intencionado.
+- Menú móvil, catálogo por categorías, consulta de queratina, servicio Corte + barba, navegación de meses, días cerrados, selección de hora y pasos Servicio / Día y hora / Datos comprobados. Botón principal visible en el primer pantallazo de teléfono vertical. Campos de 16 px y controles táctiles ampliados; no se probó Safari en un iPhone físico.
+- Validación de nombre y teléfono, aceptación de teléfono con prefijo/paréntesis/guiones, envío de una solicitud local y creación CRM comprobados. Desde móvil: confirmación, traslado a otro día/hora, cancelación, horario liberado y ficha editable. Solo el cliente propio de prueba fue archivado; historial conservado.
+- Selector móvil de las diez secciones, acción Gestionar junto a la fecha, formularios de gastos/materiales/proveedores/pedidos/documentos a 320 px, sin campos fuera del diálogo. Se conserva la navegación de escritorio.
+- Servidor QA aislado simuló HTTP 503 para disponibilidad: menú y catálogo funcionaron, calendario y envío permanecieron desactivados. Reintentar calendario recuperó los huecos reales al restaurar el API.
+- TypeScript, 17 pruebas unitarias, integración D1 de CRM/traslado/conflictos/cancelación y compilación Cloudflare superados. Pruebas de reserva realizadas en local, sin mensajes Telegram de producción.
