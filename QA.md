@@ -45,3 +45,5 @@ Pendientes antes del uso real: R2 remoto, integración Git, bindings y Access, c
 - La cita de prueba fue cancelada desde el formulario de la administración; D1 confirmó estado cancelled y la auditoría de confirmación anterior conservada. Clientes de las dos pruebas propias archivados de forma recuperable y auditada, sin borrar citas ni modificar clientes reales.
 - La lista de citas se actualiza automáticamente cada 15 segundos cuando está visible y no hay formulario activo, con botón Actualizar. El mensaje del bot se actualiza al estado final tras pulsar una acción.
 - 16 pruebas unitarias, integración D1 de aprobación y traslado, TypeScript y compilación superados. Las migraciones 0000–0004 están aplicadas en local y D1 remoto.
+
+- La cola descarta avisos cuyo estado, fecha u hora ya fueron sustituidos, para no enviar una confirmación antigua después de cancelar. 17 pruebas unitarias incluidas estas transiciones.
