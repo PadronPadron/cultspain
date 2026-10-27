@@ -4,6 +4,7 @@
   "workers_dev": false,
   "preview_urls": false,
   "keep_vars": true,
+  "triggers": {"crons": ["*/5 * * * *"]},
   "routes": [{"pattern": "cultspain.com", "custom_domain": true}],
   "d1_databases": [
     {

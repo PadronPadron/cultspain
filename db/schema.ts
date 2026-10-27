@@ -16,3 +16,6 @@ export const audit=sqliteTable('audit_log',{id:text('id').primaryKey(),at:text('
 
 // Short-lived transaction guards make stale writes fail atomically in a D1 batch.
 export const transactionGuards=sqliteTable('transaction_guards',{id:text('id').primaryKey(),valid:integer('valid').notNull()},t=>[check('guard_valid',sql`${t.valid} = 1`)]);
+
+// Notification outbox is committed atomically with each booking change.
+export const notifications=sqliteTable('notifications',{id:text('id').primaryKey(),bookingId:text('booking_id').notNull().references(()=>bookings.id),event:text('event').notNull(),payload:text('payload').notNull(),status:text('status').notNull(),attempts:integer('attempts').notNull().default(0),updatedAt:text('updated_at').notNull(),nextAttemptAt:text('next_attempt_at').notNull(),lastError:text('last_error').notNull().default('')});

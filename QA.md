@@ -26,3 +26,11 @@ Pendientes antes del uso real: R2 remoto, integración Git, bindings y Access, c
 - Interfaz Chrome: modal Cambiar fecha y hora, selección de horas libres y guardado de 10:00 a 11:00 comprobados. Datos propios de prueba cancelados y clientes archivados.
 - R2 remoto: bucket UE `cultspain-documents`, Public Access Disabled, binding confirmado. Primera compilación y despliegue de Worker completados; comprobación del dominio y autenticación administrativa pendientes.
 - Dominio comprobado después: `cultspain.com` muestra el sitio y el calendario; `/api/availability` devuelve el horario sin contactos ni citas locales; `/api/admin/state` sin sesión devuelve 403. `admin.js` publicado contiene la función y el botón de cambio de fecha/hora. Pendiente la activación verificable de Zero Trust y prueba de entrada del propietario; no se presenta como autenticación terminada.
+
+## Aprobación, acceso y Telegram · 27/10/2026
+
+- Inicio del propietario completado; administración cargada desde D1 y otra pestaña abierta sin pedir otro código. Aplicación y política de Access: un mes. One-time PIN, HTTP Only y Binding Cookie activados. Rutas `/admin*` y `/api/admin/*` protegidas.
+- Prueba en producción: una reserva ficticia creó ficha CRM con nombre, apellidos, teléfono y email. Cambio de fecha y hora desde su ficha comprobado; no se copiaron registros locales a producción.
+- 15 pruebas unitarias superadas, integración de aprobación y traslado superada, TypeScript y compilación superados antes de añadir el evento programado.
+- Solicitud nueva en estado pendiente: bloquea el horario, no permite completar sin aprobación, la propietaria confirma y queda auditoría; aprobación duplicada rechazada. Cancelación libera horario.
+- Cola de avisos guardada junto a cada cambio. Sin bot configurado conserva los avisos. Pruebas del API Telegram con transporte simulado: errores no contienen el token y la vinculación solo acepta un comando exacto y reciente dentro de un grupo. Envío real pendiente de vincular el grupo.

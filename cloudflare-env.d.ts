@@ -7,3 +7,4 @@ declare namespace Cloudflare {
 declare namespace Cloudflare { interface Env { ADMIN_USER_ID?: string; } }
 
 declare namespace Cloudflare { interface Env { CF_ACCESS_TEAM_DOMAIN?: string; CF_ACCESS_AUD?: string; ADMIN_EMAIL?: string; } }
+declare namespace Cloudflare { interface Env { TELEGRAM_BOT_TOKEN?: string; TELEGRAM_CHAT_ID?: string; } }

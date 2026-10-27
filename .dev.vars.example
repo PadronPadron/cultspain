@@ -2,3 +2,6 @@
 CF_ACCESS_TEAM_DOMAIN=
 CF_ACCESS_AUD=
 ADMIN_EMAIL=
+# Bot exclusivo del salón. Nunca guardar el token real en Git.
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=

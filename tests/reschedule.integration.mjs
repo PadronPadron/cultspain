@@ -28,6 +28,6 @@ try{
  const history=(await state()).bookings.filter(x=>x.clientId===one.clientId);assert.equal(history.length,2);assert(history.some(x=>x.status==='cancelled'));
  console.log('PASS: automatic CRM creation/reuse/history, same-day and date moves, conflict rollback, stale change rejected, closed day rejected, cancellation releases time and audit retained.');
 }finally{
- const s=await state();for(const id of created){const b=s.bookings.find(x=>x.id===id);if(b?.status==='confirmed')await request('admin/bookings/'+id,'PUT',{action:'cancel'})}
+ const s=await state();for(const id of created){const b=s.bookings.find(x=>x.id===id);if(['pending','confirmed'].includes(b?.status))await request('admin/bookings/'+id,'PUT',{action:'cancel'})}
  const after=await state();for(const c of after.clients.filter(x=>x.firstName===tag&&!x.archived))await request('admin/clients/'+c.id,'PUT',{action:'archive',revision:c.revision});
 }

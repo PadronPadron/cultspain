@@ -6,12 +6,12 @@
 - Worker: `cultspain`, vinculado al dominio `cultspain.com`.
 - Repositorio: `PadronPadron/cultspain`, rama de producción prevista `main`.
 - D1 `cultspain-db`, ID `483999f1-7667-4b24-b70d-6b48dc8f952f`, jurisdicción UE.
-- D1 contiene las 12 tablas de la aplicación y `d1_migrations`, con las migraciones `0000_useful_warhawk.sql`, `0001_jittery_post.sql` y `0002_steady_infant_terrible.sql` registradas. Esquema aplicado una vez por la consola del panel; no se han copiado los datos locales de prueba.
+- D1 contiene las 13 tablas de la aplicación y `d1_migrations`, con las migraciones `0000_useful_warhawk.sql`, `0001_jittery_post.sql` , `0002_steady_infant_terrible.sql` y `0003_clean_stellaris.sql` registradas. Esquema aplicado una vez por la consola del panel; no se han copiado los datos locales de prueba.
 - R2 activado por el propietario el 27/10/2026. Bucket `cultspain-documents` creado durante el despliegue, jurisdicción UE y acceso público desactivado, verificados en el panel. Binding `BUCKET` confirmado en el registro de despliegue.
 
 El 26/10/2026 el panel indicó una conexión Git desconectada y una última compilación fallida. No se consideran pruebas de publicación ni la compra del dominio ni la vinculación del repositorio.
 
-El 27/10/2026 se completó el despliegue automático desde `main`. Sitio comprobado en `https://cultspain.com` con el perfil de Olga, catálogo sin precios y calendario cargado desde D1. Archivo administrativo publicado con cambio de fecha/hora. API administrativa sin autenticación: 403; disponibilidad pública: sin contactos ni reservas locales de prueba. El sitio sigue indicando reservas de prueba. El inicio de sesión administrativo requiere terminar el alta de Zero Trust y configurar su aplicación. `keep_vars` conserva la configuración de acceso del panel en futuras publicaciones.
+El 27/10/2026 se completó el despliegue automático desde `main`. Sitio comprobado en `https://cultspain.com` con el perfil de Olga, catálogo sin precios y calendario cargado desde D1. Archivo administrativo publicado con cambio de fecha/hora. API administrativa sin autenticación: 403; disponibilidad pública: sin contactos ni reservas locales de prueba. El sitio sigue indicando reservas de prueba. Zero Trust activado por el propietario; aplicación administrativa configurada con One-time PIN y sesión de un mes. `keep_vars` conserva la configuración de acceso del panel en futuras publicaciones.
 
 ## Preparación antes del primer despliegue
 
@@ -20,8 +20,8 @@ El 27/10/2026 se completó el despliegue automático desde `main`. Sitio comprob
 3. El binding `DB` → `cultspain-db` ya está conectado y verificado. Binding `BUCKET` → `cultspain-documents` también conectado. `cloudflare.production.json` guarda sus nombres e ID.
 4. Integración Git reconectada el 27/10/2026: acceso de la aplicación Cloudflare al repositorio `PadronPadron/cultspain` autorizado por el propietario y guardado. El panel muestra el repositorio conectado y la rama `main`.
 5. Comandos ya guardados en el panel. Build command: `npm run build:cloudflare`. Deploy command: `npm run deploy:cloudflare`. Root directory: `/`. Worker: `cultspain`.
-6. Configurar Cloudflare Access para `/admin.html` y `/api/admin/*` como rutas de una aplicación de acceso restringida a la propietaria. Las rutas públicas `/api/availability` y `/api/bookings` permanecen disponibles para reservas.
-7. Configurar en las variables de ejecución `CF_ACCESS_TEAM_DOMAIN` (sin https), `CF_ACCESS_AUD` y `ADMIN_EMAIL`. Nunca poner secretos o sesiones en el repositorio.
+6. Cloudflare Access configurado para `/admin*` (incluidos `/admin` y `/admin.html`) y `/api/admin/*`, aplicación `CULT SPAIN · Administración` y política restringida al correo autorizado por el propietario. Las rutas públicas `/api/availability` y `/api/bookings` permanecen disponibles para reservas.
+7. Variables de ejecución `CF_ACCESS_TEAM_DOMAIN` (sin https), `CF_ACCESS_AUD` y `ADMIN_EMAIL` guardadas y desplegadas desde el panel. Nunca poner secretos o sesiones en el repositorio.
 8. Antes de activar uso real, confirmar servicios, duraciones, horario, datos de contacto, avisos y política de privacidad; revisar protección antiabuso de la reserva pública, copias de seguridad y sistema fiscal con la asesoría.
 
 El backend comprueba criptográficamente firma, emisor, audiencia, expiración y email de los JWT de Access. Sin configuración válida rechaza el acceso administrativo. El acceso local sin login solo existe en desarrollo sobre loopback. Una cabecera con un nombre o email por sí sola no concede permisos.
@@ -50,3 +50,19 @@ Añadir cambios en `db/schema.ts` y ejecutar `npm run db:generate`. Revisar el S
 ## Catálogo sin precios · 27/10/2026
 
 La migración `0002_steady_infant_terrible.sql` diferencia las nuevas reservas sin importe de las operaciones históricas. Aplicada localmente y en D1 remoto el 27/10/2026; verificados la columna `price_confirmed` y el registro de las tres migraciones. No modifica importes ni borra registros anteriores. El catálogo público no tiene precios. Los cobros se registran manualmente en el salón.
+
+## Sesión del propietario
+
+Aplicación y política Allow: un mes. Único método permitido: One-time PIN al correo autorizado. HTTP Only y Binding Cookie activados; cookie de dominio compartida entre la página administrativa y su API. No se usa una lista de IP para recordar el dispositivo. El navegador conserva el acceso durante la sesión salvo cierre de sesión, borrado de cookies o revocación. Un navegador nuevo o el modo privado exige autenticación. La solicitud administrativa sin sesión redirige a Cloudflare Access (302); el servidor sigue verificando el JWT firmado.
+
+## Aprobación y avisos Telegram
+
+Nuevas reservas: estado `pending`, ficha CRM y ocupación del horario en una misma transacción. La propietaria confirma; puede trasladar manteniendo el estado o cancelar/rechazar y liberar el horario. Citas anteriores conservan su estado.
+
+Token de @cultspainBot guardado como secreto `TELEGRAM_BOT_TOKEN` en Cloudflare, nunca en el repositorio. En Avisos Telegram se genera un comando de vinculación de grupo de diez minutos. Añadir el bot al grupo del salón, enviar el comando y pulsar Comprobar conexión. La vinculación solo acepta un comando exacto y reciente de un grupo; no se modifican webhooks existentes.
+
+`notifications` guarda avisos en la misma transacción de la cita. Intento inmediato y tarea programada cada cinco minutos; reintentos con espera progresiva y botón manual. Error de Telegram no elimina la solicitud. Semántica al menos una vez: un timeout después de entregar puede producir repetición, por lo que el aviso conserva referencia de cita. Los avisos contienen servicio, fecha, hora y enlace a la administración; no contienen nombre, teléfono ni email del cliente. El cliente recibe respuesta en la web; la confirmación del salón se gestiona con el cliente por su canal habitual.
+
+Migración 0003 aplicada en local y D1 remoto; registro verificado el 27/10/2026. Envío real pendiente de vincular y comprobar el grupo.
+
+API utilizada según la [documentación oficial de Telegram](https://core.telegram.org/bots/api): sendMessage, getMe, getUpdates y getWebhookInfo.
