@@ -1,6 +1,6 @@
 import {InputError,text,required,cents,date} from './accounting';
 import {calendarVersion,one,stmt,calendarBatch,auditStmt,all,id,now} from './store';
-import {notificationStmt,flushTelegram} from './telegram';
+import {notificationStmt,flushNotifications} from './notifications';
 // @ts-ignore Shared scheduling rules.
 import {slots,min,today,initial} from '../public/model.js';
 async function schedulingState(){const saved=await one("SELECT value FROM settings WHERE key='schedule'");const schedule=saved?JSON.parse(saved.value):{week:initial().week,exceptions:{}};return {...schedule,bookings:await all('SELECT id,date,time,duration,status FROM bookings')}}
@@ -24,6 +24,6 @@ export async function changeBooking(key:string,b:any,actor:string,notifyNow=true
   if(['confirm','reschedule','cancel'].includes(b.action))commands.push(notificationStmt(key,b.action,b.action==='reschedule'?b.date:old.date,b.action==='reschedule'?b.time:old.time,old.service,old.status==='pending'&&b.action==='reschedule'));
   commands.push(auditStmt(actor,'bookings',key,b.action,old,b));
   try{await calendarBatch(version,commands)}catch(e){if(String(e).includes('UNIQUE'))throw new InputError('Este horario ya está ocupado. Elige otro.',409);throw e}
-  if(notifyNow)try{await flushTelegram(1)}catch{}
+  if(notifyNow)try{await flushNotifications(1)}catch{}
   return {id:key}
 }

@@ -1,3 +1,4 @@
+.whatsapp-settings{margin:24px 0}.whatsapp-settings details{margin:18px 0;line-height:1.65}.whatsapp-settings summary{cursor:pointer;padding:12px 0}.whatsapp-settings li{margin:10px 0}.whatsapp-settings code{white-space:normal;overflow-wrap:anywhere}.notification-consent{display:flex;align-items:flex-start;gap:12px;font-size:14px;line-height:1.6;margin:20px 0}.notification-consent input{width:22px;min-width:22px;height:22px;min-height:22px!important;margin-top:3px}.notification-channel button,.whatsapp-settings button{min-height:44px;white-space:normal;margin:6px 8px 6px 0}
 .mobile-table-label,.mobile-record-summary,.mobile-record-manage{display:none}
 .record-docs-heading{margin-top:24px}.record-documents{display:grid;gap:8px}.record-documents a{white-space:normal;overflow-wrap:anywhere}
 .finance-entry-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:24px}.finance-entry-actions .button{min-height:48px}

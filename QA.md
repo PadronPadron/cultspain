@@ -73,3 +73,12 @@ Pendientes antes del uso real: R2 remoto, integración Git, bindings y Access, c
 - Verificados 320, 375, 390, 430, 768 y 844 px: ancho del documento igual al viewport, tablas completas sin desplazamiento horizontal. Escritorio 1280 px conserva todas las columnas, con desplazamiento dentro de tablas extensas.
 - A 320 px, detalles de las seis clases de registro y formularios caben dentro del diálogo; proveedores largos y SHA-256 se ajustan al ancho. Archivo/restauración mediante formulario, sin depender de confirmaciones nativas del navegador. Tabla vacía muestra un mensaje a ancho completo.
 - Cloudflare D1: tabla incomes, 15 columnas, índices de fecha y cita única y migración 0005 registrados. Punto de recuperación previo obtenido; no se crearon cobros ficticios en producción.
+
+## WhatsApp — подготовка без подключения личного номера · 28/10/2026
+
+- Дополнительный канал GREEN-API для выбранной группы; Telegram остаётся выбранным по умолчанию. Старые уведомления сохраняют свой канал. Ограничен объём обработки двух очередей за один запуск cron.
+- Защищённая админка «Avisos»: информация о доступе связанного устройства, отдельное подтверждение подключения, команда на десять минут, проверка группы, тестовое сообщение с ответом VERIFICAR, включение только после проверки приёма и ответа. Токен — только Secret Cloudflare.
+- Исходящие сообщения с телефона Olga поддерживаются отдельно от входящих сообщений других участников. События API не принимаются как команды. Достаточно текущего членства в группе, как и в Telegram.
+- Вебхук требует Bearer-секрет; проверяются экземпляр, выбранная группа, её актуальный состав, исходное сообщение, дата/время и статус pending. В журнале актор — хеш, не полный номер. Личные чаты отбрасываются без сохранения.
+- 22 unit-теста, TypeScript, локальные интеграции подтверждения/переноса и сборка пройдены. Дополнительно изолированный SQLite + имитация GREEN-API проверили привязку с телефона Olga, проверочное сообщение, отказ активации до проверки, запрет чужого вебхука, группы, участника, экземпляра и ссылки на сообщение, устаревший и повторный ответ, подтверждение, отказ с освобождением времени и раздельные очереди. Внешняя сеть в тесте провайдера не используется.
+- Интерфейс на 320 px: бокового переполнения нет, информационный раздел раскрывается, кнопка активации без подключения отключена. Реальная привязка номера, доступ стороннего провайдера и проверка доставки в группе ожидают явного согласия владелицы и её действия на телефоне. Подготовка не считается подключением WhatsApp.
