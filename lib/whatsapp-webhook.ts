@@ -1,7 +1,7 @@
 import {one,database,auditStmt} from './store';
 import {changeBooking} from './booking-actions';
 import {InputError} from './accounting';
-import {whatsappConfig,setting,saveSetting} from './whatsapp';
+import {whatsappConfig,setting,saveSetting,flushWhatsApp} from './whatsapp';
 import {whatsappCall,whatsappEnvelope,whatsappAction,secureEqual,groupMember} from './whatsapp-core';
 export async function handleWhatsAppWebhook(request:Request){
  const secret=await setting('whatsapp_webhook_secret');if(!secret||!secureEqual(request.headers.get('Authorization')||'','Bearer '+secret))return Response.json({error:'No autorizado.'},{status:403});
@@ -20,6 +20,7 @@ export async function handleWhatsAppWebhook(request:Request){
  if(current?.status!=='pending'||original.date!==current.date||original.time!==current.time||!['request','reschedule'].includes(original.event))return ok();
  const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(message.sender)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,24);
  try{await changeBooking(notice.booking_id,{action,expectedDate:original.date,expectedTime:original.time,expectedStatus:'pending',reason:'Respuesta de un miembro del grupo de WhatsApp.'},'whatsapp:'+digest,false)}catch(error){if(error instanceof InputError)return ok();throw error}
- // The state change and its next notification are atomic; cron delivers the updated status.
+ // Deliver the saved status promptly; a failed delivery remains queued for cron.
+ try{await flushWhatsApp(1)}catch{}
  return ok();
 }

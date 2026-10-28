@@ -21,7 +21,7 @@ El servidor de CULT SPAIN descarta los chats personales y los grupos no seleccio
 
 Responder citando el aviso con `Confirmar` o `Rechazar`. También se reconocen los equivalentes rusos exactos. No se ejecutan órdenes ambiguas ni respuestas sin la referencia del mensaje. Se aceptan tanto mensajes entrantes de otros miembros como mensajes enviados por Olga desde su teléfono; los ecos de envíos del API se ignoran.
 
-El webhook público requiere el secreto Bearer configurado automáticamente en GREEN-API. Se verifican instancia, grupo actual, miembro actual, ID del aviso original, estado pendiente y fecha/hora actuales. Las respuestas duplicadas o a avisos antiguos no vuelven a modificar la cita. Cambio, auditoría y nuevo aviso se guardan juntos en D1; cron entrega el estado actualizado.
+El webhook público requiere el secreto Bearer configurado automáticamente en GREEN-API. Se verifican instancia, grupo actual, miembro actual, ID del aviso original, estado pendiente y fecha/hora actuales. Las respuestas duplicadas o a avisos antiguos no vuelven a modificar la cita. Cambio, auditoría y nuevo aviso se guardan juntos en D1; se intenta entregar el estado actualizado de inmediato y cron reintenta si falla.
 
 ## Pruebas
 
