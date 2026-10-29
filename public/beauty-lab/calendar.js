@@ -6,7 +6,7 @@ export const addDays = (value, days) => { const d = new Date(value+'T12:00:00Z')
 export const services = [
  {id:'extension',name:'Extensión de uñas',duration:120,priceCents:4000},
  {id:'manicura',name:'Manicura rusa · uñas cortas',duration:70,priceCents:2700},
- {id:'manicura-media',name:'Manicura rusa · uñas medianas',duration:90,priceCents:null},
+ {id:'manicura-media',name:'Manicura rusa · uñas medianas',duration:90,priceCents:2700},
  {id:'manicura-larga',name:'Manicura rusa · uñas naturales largas',duration:90,priceCents:3000},
  {id:'pedicura',name:'Pedicura',duration:70,priceCents:3500},
  {id:'higienica',name:'Manicura higiénica sin esmaltado',duration:40,priceCents:1800,design:false},
