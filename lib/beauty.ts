@@ -4,6 +4,8 @@ import {InputError, required, text, date, email, cents} from './accounting';
 import {sameOrigin} from './store';
 // @ts-ignore Pure browser/server calendar shared by Beauty LAB only.
 import {services, appointment, defaultSchedule, availableSlots, validHours, intervals, minute, dayAt} from '../public/beauty-lab/calendar.js';
+// @ts-ignore Shared labels for Beauty LAB operating expenses.
+import {expenseCategories} from '../public/beauty-lab/accounting.js';
 const now=()=>new Date().toISOString(), id=()=>crypto.randomUUID();
 function db(){if(!env.BEAUTY_DB)throw new InputError('La agenda estará disponible próximamente.',503);return env.BEAUTY_DB}
 const stmt=(sql:string,args:unknown[]=[])=>db().prepare(sql).bind(...args);
@@ -68,11 +70,13 @@ async function saveEntry(key:string|undefined,b:any,actor:string){const old=key?
  if(old){required(b.reason,'Motivo del cambio',1000);if(['archive','restore'].includes(b.action)){const archived=b.action==='archive'?1:0;await revision('entries',old,b,[stmt('UPDATE entries SET archived=?,revision=revision+1,updated_at=? WHERE id=?',[archived,stamp,k]),audit(actor,'entries',k,b.action,old,b)]);return {id:k}}}
  const kind=old?.kind??b.kind;if(!['income','expense'].includes(kind))throw new InputError('Movimiento no válido.');const amount=cents(b.amountCents);if(!amount)throw new InputError('El importe debe ser mayor que cero.');
  if(!['cash','card','transfer','other'].includes(b.method))throw new InputError('Selecciona el método de pago.');
+ if(kind==='expense'&&(b.clientId||b.bookingId))throw new InputError('Los gastos del negocio no se vinculan a clientes ni a citas.');
+ const category=kind==='expense'?(b.category||'other'):'';if(kind==='expense'&&!Object.hasOwn(expenseCategories,category))throw new InputError('Selecciona una categoría de gasto.');
  const client=b.clientId?await record('clients',required(b.clientId,'Cliente',80)):null;
  const booking=b.bookingId?await record('bookings',required(b.bookingId,'Cita',80)):null;
  if(booking&&(kind!=='income'||client?.id!==booking.client_id))throw new InputError('El cobro debe corresponder al cliente de la cita.');
- const values=[date(b.date),required(b.description,'Concepto',300),amount,b.method,client?.id||null,booking?.id||null,text(b.notes,2000),stamp];
- const q=old?stmt('UPDATE entries SET date=?,description=?,amount_cents=?,method=?,client_id=?,booking_id=?,notes=?,updated_at=?,revision=revision+1 WHERE id=?',[...values,k]):stmt('INSERT INTO entries(date,description,amount_cents,method,client_id,booking_id,notes,updated_at,id,kind,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)',[...values,k,kind,stamp]);
+ const values=[date(b.date),required(b.description,'Concepto',300),amount,b.method,client?.id||null,booking?.id||null,text(b.notes,2000),stamp,category];
+ const q=old?stmt('UPDATE entries SET date=?,description=?,amount_cents=?,method=?,client_id=?,booking_id=?,notes=?,updated_at=?,category=?,revision=revision+1 WHERE id=?',[...values,k]):stmt('INSERT INTO entries(date,description,amount_cents,method,client_id,booking_id,notes,updated_at,category,id,kind,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',[...values,k,kind,stamp]);
  const commands=[q,audit(actor,'entries',k,old?'update':'create',old,b)];try{if(old)await revision('entries',old,b,commands);else await db().batch(commands)}catch(e){if(String(e).includes('UNIQUE'))throw new InputError('Esta cita ya tiene un cobro registrado.',409);throw e}return {id:k};
 }
 async function saveSchedule(b:any,actor:string){
@@ -98,4 +102,4 @@ async function handler(request:Request){
  if(['POST','PUT'].includes(method)&&['clients','entries'].includes(type)){if((method==='POST'&&key)||(method==='PUT'&&!key))throw new InputError('Ruta no válida.',404);return json(await (type==='clients'?saveClient:saveEntry)(key,await body(request),actor),method==='POST'?201:200)}
  throw new InputError('Página no encontrada.',404);
 }
-export async function beautyAPI(request:Request){try{return await handler(request)}catch(e){return json({error:e instanceof InputError?e.message:'No se ha podido guardar. Inténtalo de nuevo.'},e instanceof InputError?e.status:500)}}
+export async function beautyAPI(request:Request){try{return await handler(request)}catch(e){if(import.meta.env.DEV)console.error(e);return json({error:e instanceof InputError?e.message:'No se ha podido guardar. Inténtalo de nuevo.'},e instanceof InputError?e.status:500)}}

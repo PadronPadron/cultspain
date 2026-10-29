@@ -17,3 +17,5 @@ Migraciones propias en `migrations-beauty/`, aplicar solo a BEAUTY_DB. 0001 y 00
 Pruebas: `npm test`, `npm run typecheck`, `npm run build:cloudflare`. Integración local: `node tests/beauty.integration.mjs`; comprueba concurrencia, duplicados, precios calculados por servidor, CRM, correcciones, cancelación, cambios de horario e igualdad del estado CULT antes/después. No ejecutar integración contra producción. Sus registros locales quedan archivados y sus citas canceladas.
 
 Pendiente para comunicación directa: teléfono y Telegram de la profesional. No se han inventado ni publicado contactos.
+
+Los gastos se clasifican en materiales, alquiler, impuestos/cuotas, suministros u otros gastos. No se vinculan a clientes ni citas, tampoco en el CSV. El servidor rechaza esa asociación. Los ingresos conservan el vínculo opcional al cliente y al cobro de una cita.

@@ -17,8 +17,9 @@ state=await req('admin/state');booking=state.bookings.find(b=>b.id===booking.id)
 state=await req('admin/state');await req('admin/schedule','PUT',{...state.schedule,version:state.version,exceptions:{...state.schedule.exceptions,[day]:{open:false}}},409);
 const income=await req('admin/entries','POST',{kind:'income',date:dayAt(),description:tag+' cobro',amountCents:3500,method:'cash',clientId:booking.client_id,bookingId:booking.id},201);
 await req('admin/entries','POST',{kind:'income',date:dayAt(),description:'duplicate',amountCents:3500,method:'cash',clientId:booking.client_id,bookingId:booking.id},409);
-const expense=await req('admin/entries','POST',{kind:'expense',date:dayAt(),description:tag+' gasto',amountCents:1250,method:'card'},201);
-state=await req('admin/state');const inc=state.entries.find(e=>e.id===income.id);await req('admin/entries/'+income.id,'PUT',{revision:inc.revision,action:'archive'},400);
+await req('admin/entries','POST',{kind:'expense',date:dayAt(),description:'Invalid client link',amountCents:1250,method:'card',clientId:booking.client_id},400);
+const expense=await req('admin/entries','POST',{kind:'expense',date:dayAt(),description:tag+' gasto',category:'rent',amountCents:1250,method:'card'},201);
+state=await req('admin/state');assert.equal(state.entries.find(e=>e.id===expense.id).category,'rent');assert.equal(state.entries.find(e=>e.id===expense.id).client_id,null);const inc=state.entries.find(e=>e.id===income.id);await req('admin/entries/'+income.id,'PUT',{revision:inc.revision,action:'archive'},400);
 for(const k of [income.id,expense.id]){const e=state.entries.find(e=>e.id===k);await req('admin/entries/'+k,'PUT',{revision:e.revision,action:'archive',reason:'Prueba local terminada'})}
 booking=state.bookings.find(b=>b.id===booking.id);await req('admin/bookings/'+booking.id,'PUT',{revision:booking.revision,status:'cancelled'});const c=state.clients.find(c=>c.id===booking.client_id);await req('admin/clients/'+c.id,'PUT',{revision:c.revision,action:'archive'});
 state=await req('admin/state');await req('admin/schedule','PUT',{...original.schedule,version:state.version});
