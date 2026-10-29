@@ -10,3 +10,5 @@ declare namespace Cloudflare { interface Env { CF_ACCESS_TEAM_DOMAIN?: string; C
 declare namespace Cloudflare { interface Env { TELEGRAM_BOT_TOKEN?: string; TELEGRAM_CHAT_ID?: string; } }
 
 declare namespace Cloudflare { interface Env { WHATSAPP_API_URL?:string; WHATSAPP_INSTANCE_ID?:string; WHATSAPP_API_TOKEN?:string; } }
+
+declare namespace Cloudflare { interface Env { BEAUTY_DB?: D1Database; BEAUTY_ACCESS_AUD?: string; BEAUTY_ADMIN_EMAIL?: string; } }

@@ -1,0 +1,6 @@
+/beauty-lab/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+  Referrer-Policy: same-origin
+  X-Content-Type-Options: nosniff
+/beauty-lab/admin*
+  Cache-Control: no-store

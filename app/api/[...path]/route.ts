@@ -1,3 +1,4 @@
+import {beautyAPI} from '../../../lib/beauty';
 import {env} from 'cloudflare:workers';
 import{InputError,text,required,cents,date,email,totals,sniffFile,quantity}from'../../../lib/accounting';
 import{admin,sameOrigin,database,stmt,all,one,auditStmt,camel,now,id,revisionBatch,calendarVersion,calendarBatch}from'../../../lib/store';
@@ -46,6 +47,7 @@ async function upload(request:Request,actor:string){
  const kind=required(form.get('kind'),'Tipo de documento',30);if(!['invoice_received','invoice_issued','receipt','contract','photo','other'].includes(kind))throw new InputError('Tipo de documento no válido.');const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(x=>x.toString(16).padStart(2,'0')).join('');const recordId=id(),objectKey='documents/'+recordId,stamp=now(),filename=required(file.name,'Nombre del archivo',250).replace(/[\r\n\u0000]/g,'');const values=[recordId,stamp,stamp,entityType,entityId,kind,text(form.get('number'),100),date(form.get('date')),filename,mime,file.size,hash,objectKey,text(form.get('notes'),3000)];await env.BUCKET.put(objectKey,bytes,{httpMetadata:{contentType:mime},customMetadata:{sha256:hash}});try{await database().batch([stmt('INSERT INTO documents(id,created_at,updated_at,entity_type,entity_id,kind,number,date,name,mime,size,sha256,object_key,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',values),auditStmt(actor,'documents',recordId,'upload',null,{entityType,entityId,name:filename,sha256:hash,size:file.size})])}catch(e){await env.BUCKET.delete(objectKey);throw e}return {id:recordId}
 }
 async function handler(request:Request){
+ if(new URL(request.url).pathname.startsWith('/api/beauty/'))return beautyAPI(request);
  const u=new URL(request.url),parts=u.pathname.replace(/^\/api\/?/,'').split('/').filter(Boolean),[type,key,action]=parts[0]==='admin'?parts.slice(1):parts;const isAdminPath=parts[0]==='admin';const method=request.method;if(method!=='GET')sameOrigin(request);
  if(!isAdminPath&&method==='POST'&&type==='whatsapp'&&key==='webhook')return await handleWhatsAppWebhook(request);
  if(!isAdminPath&&method==='POST'&&type==='telegram'&&key==='webhook')return await handleTelegramWebhook(request);

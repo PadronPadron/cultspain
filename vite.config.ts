@@ -20,6 +20,7 @@ const localBindingConfig = {
   compatibility_flags: ["nodejs_compat"],
   d1_databases: d1
     ? [
+        {binding: "BEAUTY_DB", database_name: "beauty-lab-local", database_id: "00000000-0000-4000-8000-000000000001", migrations_dir: "migrations-beauty"},
         {
           binding: d1,
           database_name: "site-creator-d1",

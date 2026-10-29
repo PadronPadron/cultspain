@@ -12,12 +12,13 @@
     "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
-    "test": "node --test tests/model.test.mjs tests/accounting.test.mjs tests/access.test.mjs tests/telegram.test.mjs tests/whatsapp.test.mjs",
+    "test": "node --test tests/model.test.mjs tests/accounting.test.mjs tests/access.test.mjs tests/telegram.test.mjs tests/whatsapp.test.mjs tests/beauty.test.mjs",
     "typecheck": "tsc --noEmit",
     "build:cloudflare": "npm run build && node scripts/prepare-cloudflare.mjs",
     "deploy:cloudflare": "node scripts/prepare-cloudflare.mjs && wrangler deploy --config dist/server/wrangler.json",
     "db:migrate:cloudflare": "wrangler d1 migrations apply DB --remote --config dist/server/wrangler.json",
-    "db:migrate:local": "node scripts/local-db.mjs"
+    "db:migrate:local": "node scripts/local-db.mjs",
+    "db:migrate:beauty:local": "node scripts/local-db.mjs --prepare-only && wrangler d1 migrations apply BEAUTY_DB --local --config .sites-runtime/wrangler-local.json --persist-to .wrangler/state"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

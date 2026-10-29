@@ -59,3 +59,7 @@ Las migraciones aplicadas se conservan sin modificarlas. El esquema está en `db
 ## Copia de seguridad
 
 La exportación para asesoría es un paquete de trabajo, no un respaldo completo del sistema. Para un respaldo local completo, detén el servidor y copia `.wrangler/state/` con los datos D1 y R2, además del código. Conserva la copia fuera de esta carpeta. En producción, D1 Time Travel y una copia separada de objetos R2 deben configurarse antes de usar documentos reales. No se han programado copias remotas automáticas en esta versión.
+
+## Beauty LAB
+
+Formulario independiente por enlace: `/beauty-lab/`; administración: `/beauty-lab/admin.html`. Base D1 y autenticación propias. Agenda, CRM, ingresos y gastos; catálogo con precios y duración editables. Preparar su base local con `npm run db:migrate:beauty:local`. Ver [BEAUTY-LAB](docs/BEAUTY-LAB.md).
