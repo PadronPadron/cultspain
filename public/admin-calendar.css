@@ -100,3 +100,25 @@
   border-color: var(--white);
   color: #141414;
 }
+
+.detail-phone {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.detail-phone > span:first-child { color: inherit; }
+.whatsapp-contact {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #496654;
+  border-radius: 8px;
+  background: #24352b;
+}
+.whatsapp-contact:hover { background: #314b3c; }
+.whatsapp-contact:focus-visible { outline: 2px solid #a2e8bb; outline-offset: 2px; }
