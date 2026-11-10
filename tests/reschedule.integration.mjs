@@ -16,7 +16,7 @@ try{
  assert.equal((await state()).bookings.find(x=>x.id===one.id).time,one.time,'Failed move preserves original');
  const newTime=slots({...await state(),bookings:(await state()).bookings.filter(x=>x.id!==one.id)},one.date,service).find(t=>t!==one.time&&t<two.time);
  assert(newTime);await move(one,one.date,newTime);
- let moved=(await state()).bookings.find(x=>x.id===one.id);assert.equal(moved.time,newTime);assert.equal(moved.clientId,one.clientId);assert.equal(moved.duration,60);assert.equal(moved.price,null);
+ let moved=(await state()).bookings.find(x=>x.id===one.id);assert.equal(moved.time,newTime);assert.equal(moved.clientId,one.clientId);assert.equal(moved.duration,one.duration);assert.equal(moved.price,null);
  await move(one,one.date,one.time,409);
  const target=addDays(one.date,1),calendar=await state(),time=slots({...calendar,bookings:calendar.bookings.filter(x=>x.id!==one.id)},target,service)[0];
  if(time){await move(moved,target,time);moved=(await state()).bookings.find(x=>x.id===one.id);assert.equal(moved.date,target);assert(slots(await request('availability'),one.date,service).includes(one.time),'Old slot released');}
