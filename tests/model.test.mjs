@@ -1,4 +1,4 @@
-import{test}from'node:test';import assert from'node:assert/strict';import{initial,services,slots,addBooking,validHours,conflicts,today,addDays}from'../public/model.js';
+import{test}from'node:test';import assert from'node:assert/strict';import{initial,services,slots,adminSlots,bookingEnd,addBooking,validHours,conflicts,today,addDays}from'../public/model.js';
 const now=new Date('2026-10-26T07:00:00Z');
 test('service and buffer fit work intervals and never overlap breaks',()=>{const s=initial();const a=slots(s,'2026-10-26',services[0],now);assert(a.includes('10:00'));assert(a.includes('12:45'));assert(!a.includes('13:00'));assert(!a.includes('14:00'));assert(a.includes('17:45'));assert(!a.includes('18:00'))});
 test('booking blocks overlaps, rejects duplicates and cancellation releases slot',()=>{const s=initial();const b=addBooking(s,{date:'2026-10-26',time:'10:00',service:'cut',name:'Test',phone:'000000'},now);assert(!slots(s,b.date,services[0],now).includes('11:00'));assert(slots(s,b.date,services[0],now).includes('11:15'));assert.throws(()=>addBooking(s,{...b},now));b.status='cancelled';assert(slots(s,b.date,services[0],now).includes('10:00'))});
@@ -9,3 +9,25 @@ test('schedule conflicts preserve existing appointments including buffer',()=>{c
 
 test('catalogue has no prices and uses the scheduled service durations',()=>{for(const s of services){assert(!Object.hasOwn(s,'price'));assert(s.duration>0)}assert.equal(services.find(s=>s.id==='cut').duration,60);assert.equal(services.find(s=>s.id==='mens-cut').duration,30);assert.equal(services.find(s=>s.id==='mens-cut-beard').duration,45);assert.equal(services.find(s=>s.id==='beard').duration,30);assert.equal(services.find(s=>s.id==='keratin').consultation,true);assert.equal(services.find(s=>s.id==='straightening').consultation,true)});
 test('consultation blocks only its stated time and new booking has no service price',()=>{const s=initial(),service=services.find(s=>s.id==='keratin');const b=addBooking(s,{date:'2026-10-26',time:'10:00',service:service.id,name:'Test',phone:'000000'},now);assert.equal(b.duration,30);assert.equal(b.price,null);assert(slots(s,'2026-10-26',service,now).includes('10:45'));assert(!slots(s,'2026-10-26',service,now).includes('10:30'))});
+
+
+test('an owner can edit the duration of a started appointment with minute precision',()=>{
+ const s=initial(),row={id:'start',date:'2026-10-26',time:'10:00',duration:60,status:'confirmed'};
+ s.bookings=[row];
+ const afterStart=new Date('2026-10-26T11:00:00Z');
+ assert(adminSlots(s,row.date,1,row,afterStart).includes(row.time));
+ assert(adminSlots(s,row.date,2000,row,afterStart).includes(row.time));
+ assert.equal(bookingEnd(row.date,row.time,2000).toISOString(),'2026-10-27T19:20:00.000Z');
+ assert.deepEqual(adminSlots(s,row.date,1.5,row,afterStart),[]);
+});
+
+test('an appointment extending into the next day blocks public and admin starts',()=>{
+ const s=initial(),row={id:'long',date:'2026-10-26',time:'10:00',duration:2000,status:'confirmed'};
+ const next='2026-10-27',service=services.find(x=>x.id==='mens-cut');
+ s.bookings=[row];
+ assert.deepEqual(slots(s,next,service,now),[]);
+ assert(!adminSlots(s,next,1,{id:'other',date:next,time:'10:00'},now).includes('10:00'));
+ assert(slots(s,'2026-10-28',service,now).includes('10:00'));
+ row.status='cancelled';
+ assert(slots(s,next,service,now).includes('10:00'));
+});

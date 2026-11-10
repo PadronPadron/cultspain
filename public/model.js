@@ -37,15 +37,42 @@ export function load(){try{const x=JSON.parse(localStorage.getItem(KEY));return 
 export const save=s=>localStorage.setItem(KEY,JSON.stringify(s));
 export function intervals(s,date){const c=s.exceptions[date]??s.week[new Date(date+'T12:00:00Z').getUTCDay()];if(!c.open)return [];const start=min(c.start),end=min(c.end);if(c.breakStart&&c.breakEnd)return [[start,min(c.breakStart)],[min(c.breakEnd),end]].filter(([a,b])=>b>a);return [[start,end]]}
 export const overlaps=(a,b,c,d)=>a<d&&c<b;
+export const calendarMinute=(date,at='00:00')=>Date.parse(`${date}T${at}:00Z`)/60000;
+export const bookingEnd=(date,at,duration)=>new Date((calendarMinute(date,at)+duration)*60000);
+export const validBookingDuration=duration=>Number.isSafeInteger(duration)&&duration>=1;
+const bookingBuffer=15;
+const busyRanges=bookings=>bookings.filter(b=>b.status!=='cancelled').map(b=>{
+ const start=calendarMinute(b.date,b.time);
+ return [start,start+b.duration+bookingBuffer];
+});
+const isFree=(busy,start,duration)=>!busy.some(([a,b])=>overlaps(start,start+duration+bookingBuffer,a,b));
+function calendarClock(clock){
+ const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(clock);
+ const at=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(clock);
+ return {date,minute:min(at)};
+}
 export function slots(s,date,service,clock=new Date(),leadMinutes=60){
- const nowDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(clock);
- if(date<nowDate||date>addDays(nowDate,90))return [];
- const nowTime=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(clock);
- const busy=s.bookings.filter(b=>b.date===date&&b.status!=='cancelled');const out=[];
- for(const [start,end] of intervals(s,date))for(let t=start;t+service.duration+15<=end;t+=15){
- if(date===nowDate&&t<min(nowTime)+leadMinutes)continue;
- if(!busy.some(b=>overlaps(t,t+service.duration+15,min(b.time),min(b.time)+b.duration+15)))out.push(time(t));}
+ const current=calendarClock(clock);
+ if(date<current.date||date>addDays(current.date,90))return [];
+ const busy=busyRanges(s.bookings),midnight=calendarMinute(date),out=[];
+ for(const [start,end] of intervals(s,date))for(let t=start;t+service.duration+bookingBuffer<=end;t+=15){
+  if(date===current.date&&t<current.minute+leadMinutes)continue;
+  if(isFree(busy,midnight+t,service.duration))out.push(time(t));
+ }
  return out;
+}
+export function adminSlots(s,date,duration,original,clock=new Date()){
+ if(!validBookingDuration(duration)||!date)return [];
+ const current=calendarClock(clock),starts=new Set();
+ if(date>=current.date&&date<=addDays(current.date,90)){
+  for(const [start,end] of intervals(s,date))for(let t=start;t<end;t+=15){
+   if(date!==current.date||t>=current.minute)starts.add(time(t));
+  }
+ }
+ // The owner can edit a booking's duration after it has started.
+ if(date===original.date)starts.add(original.time);
+ const busy=busyRanges(s.bookings.filter(b=>b.id!==original.id));
+ return [...starts].sort().filter(at=>Number.isFinite(bookingEnd(date,at,duration).getTime())&&isFree(busy,calendarMinute(date,at),duration));
 }
 export function conflicts(s){return s.bookings.filter(b=>b.status!=='cancelled'&&b.date>=today()&&!intervals(s,b.date).some(([a,z])=>min(b.time)>=a&&min(b.time)+b.duration+15<=z))}
 export function validHours(c){if(!c.open)return true;if(!c.start||!c.end||min(c.start)>=min(c.end))return false;if(c.breakStart||c.breakEnd)return !!c.breakStart&&!!c.breakEnd&&min(c.breakStart)>=min(c.start)&&min(c.breakEnd)<=min(c.end)&&min(c.breakStart)<min(c.breakEnd);return true}

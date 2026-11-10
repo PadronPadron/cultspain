@@ -52,7 +52,7 @@
   text-align: left;
   cursor: pointer;
 }
-.agenda-booking time { font-size: 12px; font-variant-numeric: tabular-nums; }
+.agenda-booking time, .agenda-continuation { font-size: 12px; font-variant-numeric: tabular-nums; }
 .agenda-booking strong, .agenda-service { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .agenda-booking strong { font-size: 13px; }
 .agenda-service { color: #c8c8c8; font-size: 11px; }
@@ -90,7 +90,8 @@
   .agenda-daily-list { gap: 8px; }
   .agenda-daily-list p { margin: 4px 0; color: #c8c8c8; font-size: 13px; }
   .agenda-daily .agenda-booking { padding: 10px; grid-template-columns: 40px minmax(0, 1fr); column-gap: 10px; }
-  .agenda-daily .agenda-booking time { grid-row: 1 / span 3; align-self: start; font-size: 13px; }
+  .agenda-daily .agenda-booking time, .agenda-daily .agenda-continuation { grid-row: 1 / span 3; align-self: start; font-size: 13px; }
+  .agenda-daily .agenda-continuation { font-size: 10px; }
   .agenda-daily .agenda-booking strong, .agenda-daily .agenda-service { white-space: normal; overflow-wrap: anywhere; }
   .agenda-daily .agenda-service, .agenda-daily .agenda-status { font-size: 12px; }
 }

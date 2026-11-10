@@ -2,7 +2,7 @@ import {InputError,text,required,cents,date} from './accounting';
 import {calendarVersion,one,stmt,calendarBatch,auditStmt,all,id,now} from './store';
 import {notificationStmt,flushNotifications} from './notifications';
 // @ts-ignore Shared scheduling rules.
-import {slots,min,today,initial} from '../public/model.js';
+import {adminSlots,bookingEnd,validBookingDuration,today,initial} from '../public/model.js';
 async function schedulingState(){const saved=await one("SELECT value FROM settings WHERE key='schedule'");const schedule=saved?JSON.parse(saved.value):{week:initial().week,exceptions:{}};return {...schedule,bookings:await all('SELECT id,date,time,duration,status FROM bookings')}}
 export async function changeBooking(key:string,b:any,actor:string,notifyNow=true){
   const version=await calendarVersion(),old=await one('SELECT * FROM bookings WHERE id=?',[key]);
@@ -14,17 +14,19 @@ export async function changeBooking(key:string,b:any,actor:string,notifyNow=true
    if(b.action==='reschedule'&&(b.expectedDate!==old.date||b.expectedTime!==old.time))throw new InputError('La cita ha cambiado. Actualiza la página antes de moverla.',409);
    if(b.action==='confirm'&&old.date<today())throw new InputError('La fecha ya ha pasado. Cambia primero la cita.',409);
    const duration=b.duration===undefined?old.duration:b.duration;
-   if(!Number.isSafeInteger(duration)||duration<15||duration>480||duration%15!==0)throw new InputError('La duración debe ser de 15 a 480 minutos, en intervalos de 15.');
+   if(!validBookingDuration(duration))throw new InputError('Introduce una duración de al menos un minuto, sin decimales.');
    b.duration=duration;
    const day=b.action==='reschedule'?date(b.date):old.date,time=b.action==='reschedule'?required(b.time,'Hora',5):old.time;
+   if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw new InputError('Introduce una hora válida.');
+   if(!Number.isFinite(bookingEnd(day,time,duration).getTime()))throw new InputError('La fecha de fin está fuera del calendario.');
    if(b.action==='reschedule'||duration!==old.duration){
-    const s=await schedulingState();s.bookings=s.bookings.filter((x:any)=>x.id!==key);
-    if(!slots(s,day,{duration},new Date(),0).includes(time))throw new InputError('La duración no cabe en este horario. Elige otra hora o reduce el tiempo.',409);
+    const s=await schedulingState();
+    if(!adminSlots(s,day,duration,old).includes(time))throw new InputError('La hora no está disponible o se solapa con otra cita. Elige otra hora o ajusta la duración.',409);
     // Older sent notices did not record a duration. Snapshot it before changing
     // the appointment so those buttons cannot confirm a different time block.
     if(duration!==old.duration)commands.push(stmt("UPDATE notifications SET payload=json_set(payload,'$.duration',?) WHERE booking_id=? AND json_valid(payload) AND json_extract(payload,'$.duration') IS NULL",[old.duration,key]));
     commands.push(stmt('DELETE FROM booking_minutes WHERE booking_id=?',[key]),stmt('UPDATE bookings SET date=?,time=?,duration=? WHERE id=?',[day,time,duration,key]));
-    for(let n=min(time);n<min(time)+duration+15;n++)commands.push(stmt('INSERT INTO booking_minutes(key,booking_id) VALUES(?,?)',[day+'|'+n,key]));
+    // The version guard protects the interval in bookings without a row per minute.
    }
    if(b.action==='confirm')commands.push(stmt("UPDATE bookings SET status='confirmed' WHERE id=?",[key]));
   }

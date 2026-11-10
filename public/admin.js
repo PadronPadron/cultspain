@@ -1,4 +1,4 @@
-import{services,serviceLabel,money,today,addDays,slots,validHours,escapeHTML as esc}from'./model.js';
+import{services,serviceLabel,money,today,addDays,adminSlots,bookingEnd,validBookingDuration,validHours,escapeHTML as esc}from'./model.js';
 import{zipFiles}from'./zip.js';
 import { bookingCalendar, shiftBookingMonth } from './admin-calendar.js';
 const $=s=>document.querySelector(s),content=$('#admin-content'),dialog=$('#client-dialog');let refreshVersion=0;let state,view=location.hash.slice(1)||'overview',search='',timer,includeArchived=false,from=today().slice(0,7)+'-01',to=today();
@@ -131,22 +131,48 @@ function field(label,name,value='',type='text',extra=''){return `<label>${label}
 function area(label,name,value=''){return `<label class="span-2">${label}<textarea name="${name}" rows="3" maxlength="3000">${esc(value)}</textarea></label>`}
 function select(label,name,html){return `<label>${label}<select aria-label="${esc(label)}" name="${name}">${html}</select></label>`}
 function openModal(heading,html,onSubmit,onSaved){if(dialog.open)dialog.close();$('#client-detail').innerHTML=`<p class="eyebrow">CULT SPAIN · GESTIÓN</p><h2>${heading}</h2><form id="editor-form" class="editor-form">${html}<div class="span-2 form-footer"><p id="form-error" role="alert"></p><button class="button light" type="submit">Guardar</button></div></form>`;dialog.showModal();$('#editor-form').onsubmit=async e=>{e.preventDefault();const b=e.currentTarget.querySelector('button[type=submit]');try{b.disabled=true;const result=await onSubmit(new FormData(e.currentTarget));dialog.close();await refresh();feedback('Datos guardados.');if(onSaved)await onSaved(result)}catch(err){$('#form-error').textContent=err.message;b.disabled=false}}}
+const bookingFinishFormat = new Intl.DateTimeFormat('es-ES', {dateStyle:'short',timeStyle:'short',timeZone:'UTC'});
 function rescheduleBooking(key,confirming=false){
  const row=state.bookings.find(x=>x.id===key);if(!row||!['pending','confirmed'].includes(row.status)||confirming&&row.status!=='pending')return;
  if(dialog.open)dialog.close();
- const calendar={...state,bookings:state.bookings.filter(x=>x.id!==key)},durationField=field('Duración acordada, minutos','duration',row.duration,'number','required min="15" max="480" step="15" inputmode="numeric"');
- openModal(confirming?'Revisar y confirmar cita':'Cambiar fecha, hora o duración',`<p class="caption span-2"><strong>${esc(row.name)}</strong> · ${esc(service(row.service))}<br>Cita actual: ${esc(row.date)} · ${esc(row.time)} · ${row.duration} min<br>${esc(statuses[row.status])}</p>`+durationField+(confirming?'':field('Fecha','date',row.date<today()?today():row.date,'date',`required min="${today()}" max="${addDays(today(),90)}"`)+select('Hora disponible','time',''))+`<p class="caption span-2" id="duration-availability"></p><p class="caption span-2">Acuerda el servicio y la duración con el cliente. Se comprueban el horario y las citas vecinas, con un margen adicional de 15 minutos.</p>`,d=>api('bookings/'+key,'PUT',{action:confirming?'confirm':'reschedule',...(confirming?{}:{date:d.get('date'),time:d.get('time')}),duration:Number(d.get('duration')),expectedDate:row.date,expectedTime:row.time,expectedDuration:row.duration,expectedStatus:row.status}),confirming?undefined:()=>{
+ const minDate=row.date<today()?row.date:today();
+ const durationField=field('Duración acordada, minutos','duration',row.duration,'number','required min="1" step="1" inputmode="numeric"');
+ openModal(confirming?'Revisar y confirmar cita':'Cambiar fecha, hora o duración',`<p class="caption span-2"><strong>${esc(row.name)}</strong> · ${esc(service(row.service))}<br>Cita actual: ${esc(row.date)} · ${esc(row.time)} · ${row.duration} min<br>${esc(statuses[row.status])}</p>`+durationField+(confirming?'':field('Fecha','date',row.date,'date',`required min="${minDate}" max="${addDays(today(),90)}"`)+select('Hora disponible','time',''))+`<p class="caption span-2" id="duration-availability" aria-live="polite"></p>`,d=>api('bookings/'+key,'PUT',{action:confirming?'confirm':'reschedule',...(confirming?{}:{date:d.get('date'),time:d.get('time')}),duration:Number(d.get('duration')),expectedDate:row.date,expectedTime:row.time,expectedDuration:row.duration,expectedStatus:row.status}),confirming?undefined:()=>{
   if(view!=='bookings'||agendaMode!=='calendar'||!$('#booking-results'))return;
   const moved=state.bookings.find(b=>b.id===key);
   if(moved){agendaDate=moved.date;renderBookingResults();}
  });
- const form=$('#editor-form'),submit=form.querySelector('[type=submit]');if(!confirming)form.elements.time.required=true;
- function updateTimes(){
-  const duration=Number(form.elements.duration.value),valid=Number.isSafeInteger(duration)&&duration>=15&&duration<=480&&duration%15===0,day=confirming?row.date:form.elements.date.value,times=valid?slots(calendar,day,{duration},new Date(),0):[];
-  if(confirming){const fits=valid&&(duration===row.duration?row.date>=today():times.includes(row.time));submit.disabled=!fits;submit.textContent=valid?`Confirmar · ${duration} min`:'Confirmar cita';$('#duration-availability').textContent=fits?'La duración cabe en el horario seleccionado.':'Esta duración no cabe en la hora actual. Cambia la fecha o la hora antes de confirmar.';}
-  else{const current=form.elements.time.value||row.time;form.elements.time.innerHTML='<option value="">'+(times.length?'Selecciona una hora':'Sin horas disponibles')+'</option>'+times.map(t=>`<option value="${t}" ${t===current?'selected':''}>${t}</option>`).join('');$('#duration-availability').textContent=valid?`Se reservarán ${duration} minutos y 15 minutos de margen.`:'Introduce una duración entre 15 y 480 minutos, en intervalos de 15.';}
+ const form=$('#editor-form'),submit=form.querySelector('[type=submit]');
+ const timeField=confirming?null:form.elements.time;
+ if(timeField)timeField.required=true;
+ let preferredTime=row.time;
+ function updateNote(){
+  const duration=Number(form.elements.duration.value),valid=validBookingDuration(duration);
+  const date=confirming?row.date:form.elements.date.value,at=confirming?row.time:timeField.value;
+  const end=bookingEnd(date,at,duration);
+  const fits=valid&&Number.isFinite(end.getTime())&&(confirming
+   ? date>=today()&&(duration===row.duration||adminSlots(state,date,duration,row).includes(at))
+   : !!at);
+  submit.disabled=!fits;
+  if(confirming)submit.textContent=valid?`Confirmar · ${duration} min`:'Confirmar cita';
+  $('#duration-availability').textContent=!valid?'Introduce una duración de al menos un minuto, sin decimales.'
+   :fits?`Fin: ${bookingFinishFormat.format(end)}. Se reservan 15 minutos adicionales de margen.`
+   :'No hay una hora disponible para esta duración. Revisa si se solapa con otra cita.';
  }
- form.elements.duration.oninput=updateTimes;if(!confirming)form.elements.date.onchange=updateTimes;updateTimes();
+ function updateTimes(){
+  if(timeField){
+   const date=form.elements.date.value,duration=Number(form.elements.duration.value);
+   const times=adminSlots(state,date,duration,row);
+   timeField.innerHTML='<option value="">'+(times.length?'Selecciona una hora':'Sin horas disponibles')+'</option>'+times.map(t=>`<option value="${t}" ${t===preferredTime?'selected':''}>${t}</option>`).join('');
+  }
+  updateNote();
+ }
+ form.elements.duration.oninput=updateTimes;
+ if(timeField){
+  form.elements.date.onchange=updateTimes;
+  timeField.onchange=()=>{preferredTime=timeField.value||preferredTime;updateNote();};
+ }
+ updateTimes();
 }
 
 function edit(type,key,preset={},onSaved){if(type==='incomes')return editIncome(key,preset);const old=key?state[type].find(x=>x.id===key):null,r={...(old||{}),...preset};let html='';if(type==='clients')html=field('Nombre','firstName',r.firstName,'text','required maxlength="100"')+field('Apellidos','lastName',r.lastName,'text','maxlength="100"')+field('Teléfono','phone',r.phone,'tel','maxlength="30"')+field('Email','email',r.email,'email','maxlength="254"')+field('NIF (si se necesita para facturar)','nif',r.nif,'text','maxlength="30"')+field('Dirección de facturación','address',r.address,'text','maxlength="500"')+area('Notas','notes',r.notes);
@@ -176,7 +202,7 @@ function showBooking(key){
  const row=state.bookings.find(b=>b.id===key);if(!row)return;
  if(dialog.open)dialog.close();
  const actions=['pending','confirmed'].includes(row.status)?(row.status==='pending'?btn('Confirmar',`data-booking="confirm" data-id="${row.id}"`):'')+btn('Fecha / hora / duración',`data-booking="reschedule" data-id="${row.id}"`)+(row.status==='confirmed'?btn('Completar',`data-booking="complete" data-id="${row.id}"`):'')+btn(row.status==='pending'?'Rechazar':'Cancelar',`data-booking="cancel" data-id="${row.id}"`):row.status==='completed'?receiptAction(row):'';
- $('#client-detail').innerHTML=`<p class="eyebrow">GESTIONAR CITA</p><h2>${esc(row.name)}</h2><div class="detail-line"><span>Fecha y hora</span><strong>${esc(row.date)} · ${esc(row.time)}</strong></div><div class="detail-line"><span>Servicio</span><span>${esc(service(row.service))}</span></div><div class="detail-line"><span>Duración${row.status==='pending'?' provisional':''}</span><span>${row.duration} min</span></div><div class="detail-line"><span>Estado</span><span>${esc(statuses[row.status])}</span></div>${contactPhone(row.phone)}<p>${btn('Ver ficha del cliente',`data-client="${row.clientId}"`)}</p><div class="booking-manage-actions">${actions}</div>`;
+ $('#client-detail').innerHTML=`<p class="eyebrow">GESTIONAR CITA</p><h2>${esc(row.name)}</h2><div class="detail-line"><span>Fecha y hora</span><strong>${esc(row.date)} · ${esc(row.time)}</strong></div><div class="detail-line"><span>Servicio</span><span>${esc(service(row.service))}</span></div><div class="detail-line"><span>Duración${row.status==='pending'?' provisional':''}</span><span>${row.duration} min</span></div><div class="detail-line"><span>Fin</span><span>${bookingFinishFormat.format(bookingEnd(row.date,row.time,row.duration))}</span></div><div class="detail-line"><span>Estado</span><span>${esc(statuses[row.status])}</span></div>${contactPhone(row.phone)}<p>${btn('Ver ficha del cliente',`data-client="${row.clientId}"`)}</p><div class="booking-manage-actions">${actions}</div>`;
  dialog.showModal();
 }
 function showClient(key){if(dialog.open)dialog.close();const r=state.clients.find(x=>x.id===key);if(!r)return;$('#client-detail').innerHTML=`<p class="eyebrow">FICHA DE CLIENTE</p><h2>${esc(fn(r))}</h2>${contactPhone(r.phone)}<div class="detail-line"><span>Email</span><span>${esc(r.email)}</span></div><div class="detail-line"><span>Notas</span><span>${esc(r.notes)}</span></div><p style="margin-top:20px">${btn('Editar ficha',`data-edit="clients" data-id="${r.id}"`)}</p>${bookingTable(state.bookings.filter(b=>b.clientId===key))}`;dialog.showModal()}

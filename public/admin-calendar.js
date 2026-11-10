@@ -1,4 +1,4 @@
-import { addDays, escapeHTML as esc } from './model.js';
+import { addDays, bookingEnd, calendarMinute, escapeHTML as esc } from './model.js';
 
 const dateAtNoon = date => new Date(`${date}T12:00:00Z`);
 const monthFormat = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -21,12 +21,13 @@ function statusMark(status) {
   return `<span class="agenda-dot agenda-${status}" aria-hidden="true"></span>`;
 }
 
-function bookingCard(booking, serviceLabel, layout) {
+function bookingCard(booking, serviceLabel, layout, displayDate) {
   const { id, status, name, date, time, service } = booking;
+  const when = date===displayDate ? `<time datetime="${esc(`${date}T${time}`)}">${esc(time)}</time>` : '<span class="agenda-continuation">Continúa</span>';
   return `<button type="button" class="agenda-booking agenda-${status}"
-    id="agenda-${layout}-${esc(id)}" data-manage-booking="${esc(id)}"
+    id="agenda-${layout}-${displayDate}-${esc(id)}" data-manage-booking="${esc(id)}"
     title="${esc(`${time} · ${name} · ${serviceLabel(service)}`)}">
-    <time datetime="${esc(`${date}T${time}`)}">${esc(time)}</time>
+    ${when}
     <strong>${esc(name)}</strong>
     <span class="agenda-service">${esc(serviceLabel(service))}</span>
     <span class="agenda-status">${statusMark(status)}${statusLabels[status]}</span>
@@ -41,11 +42,17 @@ export function bookingCalendar(rows, selectedDate, today, serviceLabel) {
   const cellCount = Math.ceil((offset + monthDays) / 7) * 7;
   const byDay = new Map();
   for (const booking of rows) {
-    if (booking.date < first || booking.date >= next) continue;
-    if (!byDay.has(booking.date)) byDay.set(booking.date, []);
-    byDay.get(booking.date).push(booking);
+    if (booking.date >= next) continue;
+    const end = bookingEnd(booking.date, booking.time, booking.duration).getTime()/60000;
+    if (booking.date < first && (booking.status === 'cancelled' || end <= calendarMinute(first))) continue;
+    let date = booking.date < first ? first : booking.date;
+    while (date < next && (date === booking.date || booking.status !== 'cancelled' && calendarMinute(date) < end)) {
+      if (!byDay.has(date)) byDay.set(date, []);
+      byDay.get(date).push(booking);
+      date = addDays(date, 1);
+    }
   }
-  for (const dayRows of byDay.values()) dayRows.sort((a, b) => a.time.localeCompare(b.time));
+  for (const dayRows of byDay.values()) dayRows.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 
   const cells = Array.from({ length: cellCount }, (_, index) => {
     const day = index - offset + 1;
@@ -57,7 +64,7 @@ export function bookingCalendar(rows, selectedDate, today, serviceLabel) {
     const summary = counts.map(({ status, count }) => `${statusLabels[status]}: ${count}`).join(', ') || 'Sin citas';
     return `<div class="agenda-cell${isToday ? ' agenda-today' : ''}">
       <div class="agenda-cell-heading"><time datetime="${date}">${day}</time></div>
-      <div class="agenda-cell-bookings">${dayRows.map(row => bookingCard(row, serviceLabel, 'month')).join('')}</div>
+      <div class="agenda-cell-bookings">${dayRows.map(row => bookingCard(row, serviceLabel, 'month', date)).join('')}</div>
       <button type="button" class="agenda-date" id="agenda-date-${date}" data-agenda-date="${date}"
         aria-label="${dayFormat.format(dateAtNoon(date))}. ${summary}" aria-pressed="${date === selectedDate}"
         ${isToday ? 'aria-current="date"' : ''}>
@@ -80,6 +87,6 @@ export function bookingCalendar(rows, selectedDate, today, serviceLabel) {
   </div>
   <section class="agenda-daily" aria-labelledby="agenda-day-heading">
     <h3 id="agenda-day-heading" aria-live="polite">${dayFormat.format(dateAtNoon(selectedDate))}</h3>
-    <div class="agenda-daily-list">${dailyRows.map(row => bookingCard(row, serviceLabel, 'day')).join('') || '<p>No hay citas para este día.</p>'}</div>
+    <div class="agenda-daily-list">${dailyRows.map(row => bookingCard(row, serviceLabel, 'day', selectedDate)).join('') || '<p>No hay citas para este día.</p>'}</div>
   </section>`;
 }
