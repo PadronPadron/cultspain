@@ -16,8 +16,8 @@ export function whatsappEnvelope(update:any,instance:string){
  return {chatId:update.senderData.chatId,sender,text:text.trim(),quote:typeof quote==='string'&&quote.length<=150?quote:'',timestamp:Number(update.timestamp),messageId:update.idMessage};
 }
 export function whatsappAction(text:string){const value=text.trim().toLocaleLowerCase('es');return ['confirmar','подтвердить'].includes(value)?'confirm':['rechazar','отклонить'].includes(value)?'cancel':null}
-export function whatsappMessage(data:{event:string;bookingId:string;date:string;time:string;service:string;pending?:boolean}){
+export function whatsappMessage(data:{event:string;bookingId:string;date:string;time:string;service:string;pending?:boolean;duration?:number}){
  const title:Record<string,string>={request:'Nueva solicitud · pendiente de confirmar',confirm:'Cita confirmada',reschedule:'Cita cambiada',cancel:'Cita cancelada'};
- return `CULT SPAIN\n${title[data.event]||'Cambio de cita'}\n${data.date} · ${data.time} · hora de Lugo\n${data.service}\nReferencia: ${data.bookingId.slice(0,8)}\n${data.event==='request'||data.pending?'Responde a ESTE mensaje con Confirmar o Rechazar.\n':''}Administración: https://cultspain.com/admin#bookings`;
+ return `CULT SPAIN\n${title[data.event]||'Cambio de cita'}\n${data.date} · ${data.time} · hora de Lugo\n${data.service}${data.duration?'\n'+(data.event==='request'||data.pending?'Bloque provisional: ':'Duración: ')+data.duration+' min':''}\nReferencia: ${data.bookingId.slice(0,8)}\n${data.event==='request'||data.pending?'Responde a ESTE mensaje con Confirmar o Rechazar.\n':''}Administración: https://cultspain.com/admin#bookings`;
 }
 export function secureEqual(a:string,b:string){let diff=a.length^b.length;for(let i=0;i<Math.max(a.length,b.length);i++)diff|=(a.charCodeAt(i)||0)^(b.charCodeAt(i)||0);return diff===0}

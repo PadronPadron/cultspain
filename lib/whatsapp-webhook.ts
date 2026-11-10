@@ -16,10 +16,10 @@ export async function handleWhatsAppWebhook(request:Request){
  const target=await setting('whatsapp_group_id'),action=whatsappAction(message.text);if(message.chatId!==target||!message.quote||!action||await setting('whatsapp_verified')!=='1')return ok();
  const notice=await one("SELECT booking_id,payload FROM notifications WHERE channel='whatsapp' AND whatsapp_message_id=? AND whatsapp_chat_id=? AND status='sent'",[message.quote,target]);if(!notice)return ok();
  const group=await whatsappCall(config,'getGroupData',{groupId:target});if(group.groupId!==target||!groupMember(group,message.sender))return ok();
- const original=JSON.parse(notice.payload),current=await one('SELECT status,date,time FROM bookings WHERE id=?',[notice.booking_id]);
- if(current?.status!=='pending'||original.date!==current.date||original.time!==current.time||!['request','reschedule'].includes(original.event))return ok();
+ const original=JSON.parse(notice.payload),current=await one('SELECT status,date,time,duration FROM bookings WHERE id=?',[notice.booking_id]);
+ if(current?.status!=='pending'||original.date!==current.date||original.time!==current.time||(original.duration!==undefined&&original.duration!==current.duration)||!['request','reschedule'].includes(original.event))return ok();
  const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(message.sender)))).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,24);
- try{await changeBooking(notice.booking_id,{action,expectedDate:original.date,expectedTime:original.time,expectedStatus:'pending',reason:'Respuesta de un miembro del grupo de WhatsApp.'},'whatsapp:'+digest,false)}catch(error){if(error instanceof InputError)return ok();throw error}
+ try{await changeBooking(notice.booking_id,{action,expectedDate:original.date,expectedTime:original.time,expectedStatus:'pending',expectedDuration:current.duration,reason:'Respuesta de un miembro del grupo de WhatsApp.'},'whatsapp:'+digest,false)}catch(error){if(error instanceof InputError)return ok();throw error}
  // Deliver the saved status promptly; a failed delivery remains queued for cron.
  try{await flushWhatsApp(1)}catch{}
  return ok();

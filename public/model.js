@@ -37,13 +37,13 @@ export function load(){try{const x=JSON.parse(localStorage.getItem(KEY));return 
 export const save=s=>localStorage.setItem(KEY,JSON.stringify(s));
 export function intervals(s,date){const c=s.exceptions[date]??s.week[new Date(date+'T12:00:00Z').getUTCDay()];if(!c.open)return [];const start=min(c.start),end=min(c.end);if(c.breakStart&&c.breakEnd)return [[start,min(c.breakStart)],[min(c.breakEnd),end]].filter(([a,b])=>b>a);return [[start,end]]}
 export const overlaps=(a,b,c,d)=>a<d&&c<b;
-export function slots(s,date,service,clock=new Date()){
+export function slots(s,date,service,clock=new Date(),leadMinutes=60){
  const nowDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(clock);
  if(date<nowDate||date>addDays(nowDate,90))return [];
  const nowTime=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(clock);
  const busy=s.bookings.filter(b=>b.date===date&&b.status!=='cancelled');const out=[];
  for(const [start,end] of intervals(s,date))for(let t=start;t+service.duration+15<=end;t+=15){
- if(date===nowDate&&t<min(nowTime)+60)continue;
+ if(date===nowDate&&t<min(nowTime)+leadMinutes)continue;
  if(!busy.some(b=>overlaps(t,t+service.duration+15,min(b.time),min(b.time)+b.duration+15)))out.push(time(t));}
  return out;
 }

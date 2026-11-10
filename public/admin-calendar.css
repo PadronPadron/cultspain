@@ -1,0 +1,102 @@
+.agenda-content { padding: 16px; }
+.agenda-month-bar { display: flex; align-items: center; gap: 8px; }
+.agenda-month-bar h3 { flex: 1; margin: 0; font-size: clamp(16px, 2vw, 23px); text-align: center; }
+.agenda-month-bar h3::first-letter, .agenda-daily h3::first-letter { text-transform: uppercase; }
+.agenda-nav {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid #494949;
+  border-radius: 6px;
+  background: #242424;
+  color: var(--white);
+  font: inherit;
+  cursor: pointer;
+}
+#agenda-prev, #agenda-next { font-size: 26px; line-height: 1; }
+.agenda-nav:hover, .agenda-booking:hover { border-color: #969696; }
+.agenda-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 14px 0; font-size: 12px; color: #d4d4d4; }
+.agenda-legend span, .agenda-status { display: flex; align-items: center; gap: 5px; }
+.agenda-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--agenda-accent, #adadad); }
+.agenda-pending { --agenda-accent: #f2cb79; }
+.agenda-confirmed { --agenda-accent: #9edeb8; }
+.agenda-completed { --agenda-accent: #afc8f3; }
+.agenda-cancelled { --agenda-accent: #d9a1a1; }
+.agenda-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid #393939;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #393939;
+}
+.agenda-weekday { padding: 8px 2px; background: #242424; color: #ddd; text-align: center; font-size: 12px; }
+.agenda-cell { min-width: 0; min-height: 92px; padding: 6px; background: #171717; }
+.agenda-padding { background: #121212; }
+.agenda-today { background: #222; }
+.agenda-cell-heading time { display: inline-grid; place-items: center; min-width: 24px; min-height: 24px; margin-bottom: 5px; font-size: 13px; }
+.agenda-today .agenda-cell-heading time { border-radius: 50%; background: var(--white); color: #121212; font-weight: 750; }
+.agenda-cell-bookings, .agenda-daily-list { display: grid; gap: 5px; }
+.agenda-booking {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 7px;
+  border: 1px solid #454545;
+  border-left: 2px solid var(--agenda-accent);
+  border-radius: 5px;
+  background: #242424;
+  color: var(--white);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.agenda-booking time { font-size: 12px; font-variant-numeric: tabular-nums; }
+.agenda-booking strong, .agenda-service { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agenda-booking strong { font-size: 13px; }
+.agenda-service { color: #c8c8c8; font-size: 11px; }
+.agenda-status { font-size: 10px; color: var(--agenda-accent); }
+.agenda-booking:focus-visible, .agenda-date:focus-visible, .agenda-nav:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
+.agenda-date, .agenda-daily { display: none; }
+
+@media (max-width: 1020px) {
+  .agenda-content { padding: 12px; }
+  .agenda-cell { min-height: 0; padding: 0; }
+  .agenda-cell-bookings, .agenda-cell-heading { display: none; }
+  .agenda-date {
+    display: grid;
+    grid-template-rows: auto auto auto;
+    align-content: center;
+    justify-items: center;
+    gap: 2px;
+    width: 100%;
+    min-height: 56px;
+    padding: 4px 1px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--white);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .agenda-date[aria-current="date"] .agenda-date-number { text-decoration: underline; text-underline-offset: 3px; }
+  .agenda-date[aria-pressed="true"] { border-color: #ededed; background: #3a3a3a; font-weight: 750; }
+  .agenda-date small { line-height: 1; font-size: 10px; color: #ddd; }
+  .agenda-date-dots { display: flex; gap: 2px; }
+  .agenda-date-dots .agenda-dot { width: 4px; height: 4px; }
+  .agenda-daily { display: block; margin-top: 16px; }
+  .agenda-daily h3 { margin: 0 0 10px; font-size: 16px; }
+  .agenda-daily-list { gap: 8px; }
+  .agenda-daily-list p { margin: 4px 0; color: #c8c8c8; font-size: 13px; }
+  .agenda-daily .agenda-booking { padding: 10px; grid-template-columns: 40px minmax(0, 1fr); column-gap: 10px; }
+  .agenda-daily .agenda-booking time { grid-row: 1 / span 3; align-self: start; font-size: 13px; }
+  .agenda-daily .agenda-booking strong, .agenda-daily .agenda-service { white-space: normal; overflow-wrap: anywhere; }
+  .agenda-daily .agenda-service, .agenda-daily .agenda-status { font-size: 12px; }
+}
+
+#booking-calendar[aria-pressed="true"], #booking-list[aria-pressed="true"] {
+  background: var(--white);
+  border-color: var(--white);
+  color: #141414;
+}
