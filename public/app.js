@@ -1,4 +1,4 @@
-import{services,serviceGroups,serviceLabel,serviceTiming,initial,today,addDays,slots,escapeHTML as esc}from'./model.js';
+import{bookingServices as services,serviceGroups,serviceLabel,serviceTiming,initial,today,addDays,slots,escapeHTML as esc}from'./model.js';
 async function fetchState(){
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
  try{const r=await fetch('/api/availability',{signal:controller.signal});if(!r.ok)throw Error('No se pudo cargar el calendario.');const data=await r.json();if(!Array.isArray(data.week)||data.week.length!==7)throw Error('Calendario no disponible.');return data}finally{clearTimeout(timeout)}
@@ -21,7 +21,7 @@ async function loadAvailability(){
  finally{loading=false;$('#retry-calendar').disabled=false;render()}
 }
 $('#retry-calendar').onclick=loadAvailability;
-let catalogueGroup='mujer',bookingGroup='mujer';
+let catalogueGroup='cuts',bookingGroup='cuts';
 const groupButtons=selected=>serviceGroups.map(g=>`<button type="button" data-group="${g.id}" class="${g.id===selected?'selected':''}" aria-pressed="${g.id===selected}">${esc(g.name)}</button>`).join('');
 function renderCatalogue(){
  $('#service-groups').innerHTML=groupButtons(catalogueGroup);
@@ -33,7 +33,7 @@ function firstAvailable(){for(let i=0;i<=90;i++){const d=addDays(today(),i);if(s
 function render(){
  $('#booking-groups').innerHTML=groupButtons(bookingGroup);
  $('#booking-services').innerHTML=services.filter(s=>s.group===bookingGroup).map(s=>`<button type="button" class="booking-service ${s.id===selectedService.id?'selected':''}" data-service="${s.id}" aria-pressed="${s.id===selectedService.id}"><span>${esc(s.name)}</span><small>${esc(serviceTiming(s))}</small></button>`).join('');
- $('#service-selection-note').textContent=selectedService.consultation?'Esta cita es una consulta previa. El tratamiento completo se programa después de la valoración.':'Los tiempos son orientativos, salvo los cortes y el servicio Corte + barba, reservados en bloques de 60 minutos.';
+ $('#service-selection-note').textContent=selectedService.consultation?'Esta cita es una consulta previa. El tratamiento completo se programa después de la valoración.':'Los tiempos son orientativos. El salón confirmará la duración según el servicio y tu cabello.';
  renderCalendar();renderTimes();
 }
 function renderCalendar(){const d=new Date(month+'-01T12:00:00Z');$('#month-label').textContent=new Intl.DateTimeFormat('es',{month:'long',year:'numeric',timeZone:'UTC'}).format(d);const offset=(d.getUTCDay()+6)%7;const count=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();let html='<span></span>'.repeat(offset);for(let i=1;i<=count;i++){const key=month+'-'+String(i).padStart(2,'0');const enabled=availabilityReady&&slots(state,key,selectedService).length>0;const label=new Intl.DateTimeFormat('es',{dateStyle:'full',timeZone:'UTC'}).format(new Date(key+'T12:00:00Z'));html+=`<button data-date="${key}" class="${key===selectedDate?'selected':''} ${key===today()?'is-today':''}" ${enabled?'':'disabled'} aria-label="${label}${enabled?'':' · sin disponibilidad'}" aria-pressed="${key===selectedDate}">${i}</button>`}$('#calendar').innerHTML=html;$('#prev-month').disabled=!availabilityReady||month<=today().slice(0,7);$('#next-month').disabled=!availabilityReady||month>=addDays(today(),90).slice(0,7);}

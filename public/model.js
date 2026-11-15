@@ -1,12 +1,11 @@
 export const KEY='cult-spain-demo-v1';
 export const serviceGroups=[
- {id:'mujer',name:'Mujer',description:'Cortes, acabados y peinados para ella.'},
- {id:'hombre',name:'Hombre',description:'Corte, barba y detalles para él.'},
- {id:'color',name:'Coloración',description:'Color, mechas y matices para todos.'},
- {id:'care',name:'Cuidado & bienestar',description:'Tratamientos capilares y rituales para todos.'}
+ {id:'cuts',name:'Cortes',description:'Cortes de mujer, hombre e infantiles. Flequillo y acabado con peinado.'},
+ {id:'styling',name:'Peinados',description:'Lavado y peinado según la longitud. Ondas o rizos.'},
+ {id:'color',name:'Coloración',description:'La técnica y el consumo de producto dependen de la longitud, densidad, tipo y estado del cabello.'}
 ];
 // Working booking durations. Consultations reserve the assessment, not the full treatment.
-export const services=[
+const historicalServices=[
  {id:'cut',group:'mujer',name:'Corte de mujer',duration:60,description:'Corte, forma y acabado adaptados a tu estilo.'},
  {id:'style',group:'mujer',name:'Peinado y brushing',duration:60,estimated:true,description:'Secado, movimiento y acabado para tu día a día.'},
  {id:'updo',group:'mujer',name:'Recogidos y peinados especiales',duration:90,estimated:true,description:'Un peinado pensado para tu ocasión.'},
@@ -25,6 +24,169 @@ export const services=[
  {id:'scalp-massage',group:'care',name:'Masaje del cuero cabelludo',duration:30,estimated:true,description:'Un momento de pausa y cuidado en el salón.'},
  {id:'aroma-ritual',group:'care',name:'Aromaterapia y masaje capilar',duration:60,estimated:true,description:'Un ritual de cuidado con aromas y masaje del cuero cabelludo.'}
 ];
+export const bookingServices=[
+ {
+  "id": "menu-mens",
+  "group": "cuts",
+  "name": "Corte de hombre",
+  "duration": 60,
+  "estimated": true,
+  "description": ""
+ },
+ {
+  "id": "menu-child",
+  "group": "cuts",
+  "name": "Corte infantil",
+  "duration": 60,
+  "estimated": true,
+  "description": "Hasta 12 años."
+ },
+ {
+  "id": "menu-women",
+  "group": "cuts",
+  "name": "Lavado + corte de mujer",
+  "duration": 60,
+  "estimated": true,
+  "description": ""
+ },
+ {
+  "id": "menu-fringe",
+  "group": "cuts",
+  "name": "Flequillo",
+  "duration": 30,
+  "estimated": true,
+  "description": ""
+ },
+ {
+  "id": "menu-women-style-short",
+  "group": "cuts",
+  "name": "Lavado + corte de mujer + peinado · Corto",
+  "duration": 60,
+  "estimated": true,
+  "description": "Hasta el mentón."
+ },
+ {
+  "id": "menu-women-style-medium",
+  "group": "cuts",
+  "name": "Lavado + corte de mujer + peinado · Medio",
+  "duration": 60,
+  "estimated": true,
+  "description": "Hasta los hombros."
+ },
+ {
+  "id": "menu-women-style-long",
+  "group": "cuts",
+  "name": "Lavado + corte de mujer + peinado · Largo",
+  "duration": 60,
+  "estimated": true,
+  "description": "Por debajo de los hombros."
+ },
+ {
+  "id": "menu-style-short",
+  "group": "styling",
+  "name": "Lavado + peinado · Corto",
+  "duration": 60,
+  "estimated": true,
+  "description": "Hasta el mentón."
+ },
+ {
+  "id": "menu-style-medium",
+  "group": "styling",
+  "name": "Lavado + peinado · Medio",
+  "duration": 60,
+  "estimated": true,
+  "description": "Hasta los hombros."
+ },
+ {
+  "id": "menu-style-long",
+  "group": "styling",
+  "name": "Lavado + peinado · Largo",
+  "duration": 60,
+  "estimated": true,
+  "description": "Por debajo de los hombros."
+ },
+ {
+  "id": "menu-waves",
+  "group": "styling",
+  "name": "Lavado + ondas o rizos",
+  "duration": 60,
+  "estimated": true,
+  "description": ""
+ },
+ {
+  "id": "menu-roots-40",
+  "group": "color",
+  "name": "Color de raíz · Hasta 40 g",
+  "duration": 120,
+  "estimated": true,
+  "description": "Hasta 40 g de color."
+ },
+ {
+  "id": "menu-roots-plus",
+  "group": "color",
+  "name": "Color de raíz · Más de 40 g",
+  "duration": 120,
+  "estimated": true,
+  "description": "Más de 40 g de color."
+ },
+ {
+  "id": "menu-full-color",
+  "group": "color",
+  "name": "Color de raíz y largos",
+  "duration": 120,
+  "estimated": true,
+  "description": "Un solo tono."
+ },
+ {
+  "id": "menu-toner",
+  "group": "color",
+  "name": "Matiz / tonalización",
+  "duration": 60,
+  "estimated": true,
+  "description": ""
+ },
+ {
+  "id": "menu-partial-highlights",
+  "group": "color",
+  "name": "Mechas localizadas",
+  "duration": 180,
+  "estimated": true,
+  "description": ""
+ },
+ {
+  "id": "menu-highlights",
+  "group": "color",
+  "name": "Mechas",
+  "duration": 180,
+  "estimated": true,
+  "description": ""
+ },
+ {
+  "id": "menu-complex-color",
+  "group": "color",
+  "name": "Coloración compleja",
+  "duration": 180,
+  "estimated": true,
+  "description": ""
+ },
+ {
+  "id": "menu-airtouch",
+  "group": "color",
+  "name": "AirTouch",
+  "duration": 180,
+  "estimated": true,
+  "description": ""
+ },
+ {
+  "id": "menu-contouring",
+  "group": "color",
+  "name": "Contouring · Técnica AirTouch",
+  "duration": 180,
+  "estimated": true,
+  "description": ""
+ }
+];
+export const services=[...bookingServices,...historicalServices];
 export const serviceLabel=s=>s.name+(s.consultation?' · consulta previa':'');
 export const serviceTiming=s=>s.consultation?`Consulta previa · ${s.duration} min`:`${s.duration} min${s.estimated?' aprox.':''}`;
 export const money=n=>new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(n);
@@ -76,5 +238,5 @@ export function adminSlots(s,date,duration,original,clock=new Date()){
 }
 export function conflicts(s){return s.bookings.filter(b=>b.status!=='cancelled'&&b.date>=today()&&!intervals(s,b.date).some(([a,z])=>min(b.time)>=a&&min(b.time)+b.duration+15<=z))}
 export function validHours(c){if(!c.open)return true;if(!c.start||!c.end||min(c.start)>=min(c.end))return false;if(c.breakStart||c.breakEnd)return !!c.breakStart&&!!c.breakEnd&&min(c.breakStart)>=min(c.start)&&min(c.breakEnd)<=min(c.end)&&min(c.breakStart)<min(c.breakEnd);return true}
-export function addBooking(s,b,clock=new Date()){const service=services.find(x=>x.id===b.service);if(!service||!slots(s,b.date,service,clock).includes(b.time))throw Error('Este horario ya no está disponible. Elige otro.');const record={...b,id:crypto.randomUUID(),duration:service.duration,price:null,status:'pending',paid:0,createdAt:new Date().toISOString()};s.bookings.push(record);return record}
+export function addBooking(s,b,clock=new Date()){const service=bookingServices.find(x=>x.id===b.service);if(!service||!slots(s,b.date,service,clock).includes(b.time))throw Error('Este horario ya no está disponible. Elige otro.');const record={...b,id:crypto.randomUUID(),duration:service.duration,price:null,status:'pending',paid:0,createdAt:new Date().toISOString()};s.bookings.push(record);return record}
 export const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
