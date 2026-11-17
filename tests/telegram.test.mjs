@@ -7,3 +7,10 @@ test('Telegram rejects failed API calls and never returns token-bearing transpor
 test('callback is tied to the configured group and original message; current membership is required',()=>{const q={from:{id:123},message:{chat:{id:-100},message_id:55}};assert(callbackAuthorized(q,'-100',55));assert(!callbackAuthorized(q,'-200',55));assert(!callbackAuthorized(q,'-100',56));for(const status of ['creator','administrator','member'])assert(activeGroupMember({status}));assert(activeGroupMember({status:'restricted',is_member:true}));for(const status of ['left','kicked','restricted'])assert(!activeGroupMember({status}));});
 
 test('obsolete queued requests and confirmations are not delivered after cancellation or reschedule',()=>{const data={event:'request',date:'2026-10-30',time:'10:00'},pending={status:'pending',date:data.date,time:data.time};assert(notificationCurrent(data,pending));assert(!notificationCurrent(data,{...pending,status:'cancelled'}));assert(!notificationCurrent({...data,event:'confirm'},{...pending,status:'cancelled'}));assert(!notificationCurrent(data,{...pending,time:'11:00'}));assert(notificationCurrent({...data,event:'cancel'},{...pending,status:'cancelled'}));});
+
+test('notices for an earlier service cannot approve or announce the changed service',()=>{
+ const notice={event:'request',date:'2026-12-01',time:'10:00',duration:60,serviceId:'menu-mens'};
+ const current={status:'pending',date:notice.date,time:notice.time,duration:60,service:'menu-women'};
+ assert.equal(notificationCurrent(notice,current),false);
+ assert.equal(notificationCurrent({...notice,serviceId:'menu-women'},current),true);
+});

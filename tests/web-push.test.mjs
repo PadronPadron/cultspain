@@ -1,0 +1,12 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {encryptPush,newVapidKeys,pushRequest,b64,unb64,validPushEndpoint} from '../lib/web-push.ts';
+import {createECDH,hkdfSync,createDecipheriv} from 'node:crypto';
+test('push requests decrypt at a standard receiver and contain a valid VAPID signature',async()=>{
+ const ua=createECDH('prime256v1');ua.generateKeys();const auth=crypto.getRandomValues(new Uint8Array(16));const subscription={endpoint:'https://web.push.apple.com/test-token',keys:{p256dh:b64(ua.getPublicKey()),auth:b64(auth)}};
+ const keys=await newVapidKeys(),payload={title:'Nueva cita',body:'2026-11-20 · 10:00',tag:'id'},request=await pushRequest(subscription,keys,payload),body=Buffer.from(request.body);
+ const salt=body.subarray(0,16);assert.equal(body.readUInt32BE(16),4096);assert.equal(body[20],65);const server=body.subarray(21,86),shared=ua.computeSecret(server);
+ const ikm=hkdfSync('sha256',shared,auth,Buffer.concat([Buffer.from('WebPush: info\0'),ua.getPublicKey(),server]),32);
+ const cek=hkdfSync('sha256',ikm,salt,Buffer.from('Content-Encoding: aes128gcm\0'),16),nonce=hkdfSync('sha256',ikm,salt,Buffer.from('Content-Encoding: nonce\0'),12);
+ const decipher=createDecipheriv('aes-128-gcm',Buffer.from(cek),Buffer.from(nonce));decipher.setAuthTag(body.subarray(-16));const plaintext=Buffer.concat([decipher.update(body.subarray(86,-16)),decipher.final()]);assert.equal(plaintext.at(-1),2);assert.deepEqual(JSON.parse(plaintext.subarray(0,-1)),payload);
+ const token=request.headers.Authorization.match(/^vapid t=([^,]+), k=/)[1],parts=token.split('.');const pub=await crypto.subtle.importKey('raw',unb64(keys.publicKey),{name:'ECDSA',namedCurve:'P-256'},false,['verify']);assert(await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},pub,unb64(parts[2]),new TextEncoder().encode(parts.slice(0,2).join('.'))));const claims=JSON.parse(Buffer.from(parts[1],'base64url'));assert.equal(claims.aud,'https://web.push.apple.com');assert(claims.exp>Date.now()/1000);assert.equal(request.redirect,'error');
+});
+test('push only contacts supported HTTPS services and validates subscription keys',async()=>{for(const bad of ['http://web.push.apple.com/x','https://localhost/x','https://127.0.0.1/x','https://web.push.apple.com.evil.test/x','https://user@web.push.apple.com/x','https://web.push.apple.com:444/x'])assert.equal(validPushEndpoint(bad),false);assert(validPushEndpoint('https://fcm.googleapis.com/fcm/send/test'));await assert.rejects(()=>encryptPush('wrong','wrong','payload'));});

@@ -1,14 +1,16 @@
+import {pushQueueStmt} from './push';
 import {InputError,text,required,cents,date} from './accounting';
 import {calendarVersion,one,stmt,calendarBatch,auditStmt,all,id,now} from './store';
 import {notificationStmt,flushNotifications} from './notifications';
 // @ts-ignore Shared scheduling rules.
-import {adminSlots,bookingEnd,validBookingDuration,today,initial} from '../public/model.js';
+import {bookingServices,adminSlots,bookingEnd,validBookingDuration,today,initial} from '../public/model.js';
 async function schedulingState(){const saved=await one("SELECT value FROM settings WHERE key='schedule'");const schedule=saved?JSON.parse(saved.value):{week:initial().week,exceptions:{}};return {...schedule,bookings:await all('SELECT id,date,time,duration,status FROM bookings')}}
 export async function changeBooking(key:string,b:any,actor:string,notifyNow=true){
   const version=await calendarVersion(),old=await one('SELECT * FROM bookings WHERE id=?',[key]);
   if(!old)throw new InputError('No se ha encontrado el registro.',404);
   if(b.expectedDate!==undefined&&(b.expectedDate!==old.date||b.expectedTime!==old.time)||b.expectedStatus!==undefined&&b.expectedStatus!==old.status)throw new InputError('La cita ha cambiado. Actualiza su estado antes de continuar.',409);
   if(b.expectedDuration!==undefined&&b.expectedDuration!==old.duration)throw new InputError('La duración de la cita ha cambiado. Actualiza la página.',409);
+  if(b.expectedService!==undefined&&b.expectedService!==old.service)throw new InputError('El servicio ha cambiado. Actualiza la página.',409);
   const commands:any[]=[];b.reason=text(b.reason,1000);
   if(b.action==='reschedule'&&['pending','confirmed'].includes(old.status)||b.action==='confirm'&&old.status==='pending'){
    if(b.action==='reschedule'&&(b.expectedDate!==old.date||b.expectedTime!==old.time))throw new InputError('La cita ha cambiado. Actualiza la página antes de moverla.',409);
@@ -16,6 +18,10 @@ export async function changeBooking(key:string,b:any,actor:string,notifyNow=true
    const duration=b.duration===undefined?old.duration:b.duration;
    if(!validBookingDuration(duration))throw new InputError('Introduce una duración de al menos un minuto, sin decimales.');
    b.duration=duration;
+   const service=b.service===undefined?old.service:b.service;
+   if(service!==old.service&&!bookingServices.some((s:any)=>s.id===service))throw new InputError('Selecciona un servicio válido.');
+   b.service=service;
+   if(service!==old.service)commands.push(stmt("UPDATE notifications SET payload=json_set(payload,'$.serviceId',?) WHERE booking_id=? AND json_valid(payload) AND json_extract(payload,'$.serviceId') IS NULL",[old.service,key]),stmt('UPDATE bookings SET service=? WHERE id=?',[service,key]));
    const day=b.action==='reschedule'?date(b.date):old.date,time=b.action==='reschedule'?required(b.time,'Hora',5):old.time;
    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw new InputError('Introduce una hora válida.');
    if(!Number.isFinite(bookingEnd(day,time,duration).getTime()))throw new InputError('La fecha de fin está fuera del calendario.');
@@ -34,7 +40,8 @@ export async function changeBooking(key:string,b:any,actor:string,notifyNow=true
   else if(b.action==='cancel'&&['pending','confirmed'].includes(old.status))commands.push(stmt("UPDATE bookings SET status='cancelled' WHERE id=?",[key]),stmt('DELETE FROM booking_minutes WHERE booking_id=?',[key]));
   else if(b.action==='pay'&&old.status==='completed'&&old.paid_cents===0){if(await one('SELECT id FROM incomes WHERE booking_id=?',[key]))throw new InputError('La cita ya tiene un cobro registrado. Edita o restaura ese ingreso en Finanzas.',409);const amount=cents(b.paidCents);if(amount===0)throw new InputError('Introduce el importe realmente recibido.');commands.push(stmt('UPDATE bookings SET price_cents=?,price_confirmed=1,paid_cents=?,paid_date=? WHERE id=?',[amount,amount,date(b.date),key]),stmt("INSERT INTO incomes(id,created_at,updated_at,date,category,description,client_id,booking_id,amount_cents,payment_method) VALUES(?,?,?,?,?,?,?,?,?,?)",[id(),now(),now(),date(b.date),'Servicios','Cobro de cita',old.client_id,key,amount,'other']));}
   else throw new InputError('Esta acción ya se ha realizado o no está disponible.',409);
-  if(['confirm','reschedule','cancel'].includes(b.action))commands.push(notificationStmt(key,b.action,b.action==='reschedule'?b.date:old.date,b.action==='reschedule'?b.time:old.time,old.service,old.status==='pending'&&b.action==='reschedule',b.action==='cancel'?old.duration:b.duration));
+  if(['confirm','reschedule','cancel'].includes(b.action))commands.push(notificationStmt(key,b.action,b.action==='reschedule'?b.date:old.date,b.action==='reschedule'?b.time:old.time,b.service||old.service,old.status==='pending'&&b.action==='reschedule',b.action==='cancel'?old.duration:b.duration));
+  if(['confirm','reschedule','cancel'].includes(b.action))commands.push(pushQueueStmt(b.action,key,b.action==='reschedule'?b.date:old.date,b.action==='reschedule'?b.time:old.time));
   commands.push(auditStmt(actor,'bookings',key,b.action,old,b));
   try{await calendarBatch(version,commands)}catch(e){if(String(e).includes('UNIQUE'))throw new InputError('Este horario ya está ocupado. Elige otro.',409);throw e}
   if(notifyNow)try{await flushNotifications(1)}catch{}

@@ -4,3 +4,8 @@
   X-Content-Type-Options: nosniff
 /beauty-lab/admin*
   Cache-Control: no-store
+/admin-agenda.html
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+/agenda-sw.js
+  Cache-Control: no-cache
