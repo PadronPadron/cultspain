@@ -7,8 +7,8 @@ self.addEventListener('fetch',event=>{
 });
 self.addEventListener('push',event=>{
  let message={title:'CULT SPAIN',body:'Hay novedades en la agenda.'};try{if(event.data)message={...message,...event.data.json()};}catch{}
- event.waitUntil(self.registration.showNotification(message.title,{body:message.body,icon:'/agenda-192.png',badge:'/agenda-192.png',tag:message.tag||'cult-agenda',data:{url:'/admin-agenda.html'+(/^[a-f0-9-]{36}$/.test(message.tag||'')?'?booking='+message.tag:'')+'#bookings'}}));
+ event.waitUntil(self.registration.showNotification(message.title,{body:message.body,icon:'/agenda-192.png',badge:'/agenda-192.png',tag:message.tag||'cult-agenda',data:{url:'/admin-agenda'+(/^[a-f0-9-]{36}$/.test(message.tag||'')?'?booking='+message.tag:'')+'#bookings'}}));
 });
 self.addEventListener('notificationclick',event=>{
- event.notification.close();event.waitUntil((async()=>{const target=new URL(event.notification.data?.url||'/admin-agenda.html#bookings',self.location.origin);if(target.origin!==self.location.origin||target.pathname!=='/admin-agenda.html')return;const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});const app=windows.find(w=>new URL(w.url).pathname==='/admin-agenda.html');if(app){await app.navigate(target.href);return app.focus();}return self.clients.openWindow(target.href);})());
+ event.notification.close();event.waitUntil((async()=>{const target=new URL(event.notification.data?.url||'/admin-agenda#bookings',self.location.origin);if(target.origin!==self.location.origin||!['/admin-agenda','/admin-agenda.html'].includes(target.pathname))return;const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});const app=windows.find(w=>['/admin-agenda','/admin-agenda.html'].includes(new URL(w.url).pathname));if(app){await app.navigate(target.href);return app.focus();}return self.clients.openWindow(target.href);})());
 });

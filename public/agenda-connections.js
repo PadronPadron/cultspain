@@ -1,24 +1,39 @@
+import {agendaRegistration,withDeadline} from './agenda-worker.js';
 const $=s=>document.querySelector(s),note=$('#integration-note');
-async function api(path,body){const r=await fetch('/api/admin/'+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});if(!r.headers.get('content-type')?.includes('application/json'))throw Error('Recarga la aplicación para iniciar sesión.');const data=await r.json();if(!r.ok)throw Error(data.error||'No se ha podido guardar.');return data;}
+async function api(path,body){const r=await withDeadline(fetch('/api/admin/'+path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined}));if(!r.headers.get('content-type')?.includes('application/json'))throw Error('Recarga la aplicación para iniciar sesión.');const data=await r.json();if(!r.ok)throw Error(data.error||'No se ha podido guardar.');return data;}
 const decode=value=>Uint8Array.from(atob(value.replaceAll('-','+').replaceAll('_','/')),c=>c.charCodeAt(0));
-let registration,subscription,publicKey;
+let registration,subscription,publicKey,prepared=false,saved=false;
 const supported='serviceWorker'in navigator&&'PushManager'in window&&'Notification'in window;
-function buttons(){const active=!!subscription&&Notification.permission==='granted';$('#push-enable').hidden=active;$('#push-test').hidden=!active;$('#push-disable').hidden=!active;}
-async function prepare(){if(!supported)return;registration=await navigator.serviceWorker.register('/agenda-sw.js',{scope:'/admin-agenda.html'});await navigator.serviceWorker.ready;subscription=await registration.pushManager.getSubscription();publicKey=(await api('push')).publicKey;if(subscription&&Notification.permission==='granted')await api('push',subscription.toJSON());buttons();}
-prepare().catch(()=>{note.textContent='No se ha podido conectar las notificaciones. Puedes reintentarlo.';});
+function buttons(){const active=saved&&!!subscription&&Notification.permission==='granted';$('#push-enable').hidden=active;$('#push-test').hidden=!active;$('#push-disable').hidden=!active;}
+async function prepare(){
+ if(!supported)return;
+ registration=await agendaRegistration();
+ subscription=await withDeadline(registration.pushManager.getSubscription());
+ publicKey=(await api('push')).publicKey;
+ saved=false;if(subscription&&Notification.permission==='granted'){await api('push',subscription.toJSON());saved=true;}
+ prepared=true;buttons();
+}
+async function initialize(){
+ if(!supported)return;
+ $('#push-enable').disabled=true;note.textContent='Preparando las notificaciones…';
+ try{await prepare();note.textContent=saved?'Notificaciones conectadas. Puedes enviar un aviso de prueba.':'Listo. Pulsa «Activar notificaciones» para conectar este dispositivo.';}
+ catch(e){note.textContent=e.message;}
+ finally{$('#push-enable').disabled=false;}
+}
+initialize();
 $('#push-enable').onclick=async()=>{
  const b=$('#push-enable');b.disabled=true;
  try{
   if(!supported)throw Error('En el iPhone, añade la aplicación a la pantalla de inicio y ábrela desde su icono (iOS 16.4 o posterior).');
+  if(!prepared){await prepare();note.textContent='Conexión preparada. Pulsa «Activar notificaciones» otra vez.';return;}
   // Request permission directly from this user gesture, before any network await.
   const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('Permite las notificaciones de CULT Agenda en los ajustes del dispositivo.');
-  if(!registration||!publicKey)await prepare();
-  subscription=await registration.pushManager.getSubscription()||await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:decode(publicKey)});
-  await api('push',subscription.toJSON());buttons();note.textContent='Notificaciones activadas. Pulsa «Probar aviso» para comprobar la recepción.';
+  subscription=await withDeadline(registration.pushManager.getSubscription())||await withDeadline(registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:decode(publicKey)}));
+  await api('push',subscription.toJSON());saved=true;buttons();note.textContent='Notificaciones activadas. Pulsa «Probar aviso» para comprobar la recepción.';
  }catch(e){note.textContent=e.message;}finally{b.disabled=false;}
 };
 $('#push-test').onclick=async()=>{const b=$('#push-test');b.disabled=true;try{await api('push/test',{endpoint:subscription.endpoint});note.textContent='Aviso enviado al servicio push. Comprueba las notificaciones de tu dispositivo.';}catch(e){note.textContent=e.message;}finally{b.disabled=false;}};
-$('#push-disable').onclick=async()=>{try{await api('push',{endpoint:subscription.endpoint,action:'remove'});await subscription.unsubscribe();subscription=null;buttons();note.textContent='Avisos desactivados en este dispositivo.';}catch(e){note.textContent=e.message;}};
+$('#push-disable').onclick=async()=>{try{await api('push',{endpoint:subscription.endpoint,action:'remove'});await subscription.unsubscribe();subscription=null;saved=false;buttons();note.textContent='Avisos desactivados en este dispositivo.';}catch(e){note.textContent=e.message;}};
 $('#calendar-connect').onclick=async()=>{
  try{
   const status=await api('calendar-link'),dialog=$('#client-dialog');if(dialog.open)dialog.close();

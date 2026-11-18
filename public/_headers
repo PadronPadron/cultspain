@@ -9,3 +9,13 @@
   X-Robots-Tag: noindex, nofollow
 /agenda-sw.js
   Cache-Control: no-cache
+
+/admin-agenda
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
+/agenda-worker.js
+  Cache-Control: no-cache
+/agenda-connections.js
+  Cache-Control: no-cache
+/agenda.webmanifest
+  Cache-Control: no-cache
