@@ -3,3 +3,5 @@
 
 .agenda-app .admin-heading .eyebrow{display:none}.agenda-app .admin-heading{margin-bottom:20px}.agenda-app .admin-heading h1{font-size:32px}.agenda-app .admin-topbar{padding-bottom:14px;margin-bottom:20px}.agenda-app #week-form .table-scroll:before{display:none}
 .agenda-connections{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}#integration-note{font-size:13px;color:#bbb;margin-bottom:14px;line-height:1.5}#calendar-result{margin-top:20px;overflow-wrap:anywhere}#calendar-result label{display:block;margin:18px 0 10px}#calendar-result input{width:100%;margin-top:8px}#client-detail>p{line-height:1.6}
+
+.icloud-source{border:1px solid #555;border-radius:12px;padding:16px;margin:12px 0}.icloud-help{margin:24px 0;line-height:1.6}#icloud-add{display:grid;gap:16px;margin-top:24px}#icloud-add label{display:grid;gap:8px}#icloud-add input:not([type=checkbox]){width:100%;min-width:0;font-size:16px}.icloud-consent{grid-template-columns:20px 1fr;line-height:1.5;font-size:14px}.icloud-consent input{width:18px;height:18px}#icloud-result{margin-top:16px;line-height:1.5}

@@ -1,3 +1,4 @@
+import {ensureICloud,icloudBusy} from './icloud';
 import {pushQueueStmt} from './push';
 import {InputError,required,text,date} from './accounting';
 import {calendarVersion,calendarBatch,one,all,stmt,id,now,auditStmt} from './store';
@@ -10,10 +11,11 @@ export async function createAppointment(b:any,actor:string){
  const duration=b.duration,day=date(b.date),time=required(b.time,'Hora',5);
  if(!validBookingDuration(duration))throw new InputError('Introduce una duración válida.');
  if(!['pending','confirmed'].includes(b.status))throw new InputError('Selecciona el estado de la cita.');
+ await ensureICloud(true);
  const version=await calendarVersion(),saved=await one("SELECT value FROM settings WHERE key='schedule'");
  const schedule=saved?JSON.parse(saved.value):{week:initial().week,exceptions:{}};
  const bookings=await all('SELECT id,date,time,duration,status FROM bookings');
- if(!slots({...schedule,bookings},day,{duration},new Date(),0).includes(time))throw new InputError('Esta hora no está disponible. Actualiza la agenda y elige otra.',409);
+ if(!slots({...schedule,bookings,busy:await icloudBusy()},day,{duration},new Date(),0).includes(time))throw new InputError('Esta hora no está disponible. Actualiza la agenda y elige otra.',409);
  let client=b.clientId?await one('SELECT * FROM clients WHERE id=? AND archived=0',[required(b.clientId,'Cliente',80)]):null;
  if(b.clientId&&!client)throw new InputError('El cliente no existe o está archivado.');
  const commands:any[]=[],stamp=now();

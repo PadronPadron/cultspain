@@ -5,6 +5,7 @@ const monthFormat = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'num
 const dayFormat = new Intl.DateTimeFormat('es-ES', { dateStyle: 'full', timeZone: 'UTC' });
 const weekdays = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 const statusLabels = {
+  blocked: 'Ocupado · iCloud',
   pending: 'Pendiente',
   confirmed: 'Confirmada',
   completed: 'Completada',
@@ -23,6 +24,7 @@ function statusMark(status) {
 
 function bookingCard(booking, serviceLabel, layout, displayDate) {
   const { id, status, name, date, time, service } = booking;
+  if(booking.external)return `<div class="agenda-booking agenda-blocked" title="Modifica este evento en Apple Calendario"><time>${date===displayDate?esc(time):'Continúa'}</time><strong>Ocupado · iCloud</strong><span class="agenda-service">${booking.duration>=1440?'Día completo / varios días':esc(booking.duration)+' min'}</span><span class="agenda-status">Modificar en Apple Calendario</span></div>`;
   const when = date===displayDate ? `<time datetime="${esc(`${date}T${time}`)}">${esc(time)}</time>` : '<span class="agenda-continuation">Continúa</span>';
   return `<button type="button" class="agenda-booking agenda-${status}"
     id="agenda-${layout}-${displayDate}-${esc(id)}" data-manage-booking="${esc(id)}"

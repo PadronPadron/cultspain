@@ -19,3 +19,6 @@
   Cache-Control: no-cache
 /agenda.webmanifest
   Cache-Control: no-cache
+
+/icloud-connect.js
+  Cache-Control: no-cache

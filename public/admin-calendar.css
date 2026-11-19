@@ -123,3 +123,5 @@
 }
 .whatsapp-contact:hover { background: #314b3c; }
 .whatsapp-contact:focus-visible { outline: 2px solid #a2e8bb; outline-offset: 2px; }
+
+.agenda-booking.agenda-blocked{background:repeating-linear-gradient(135deg,#252936,#252936 8px,#2d3240 8px,#2d3240 16px);border-left:3px solid #aebcdb;cursor:default}.agenda-dot.agenda-blocked{background:#aebcdb}

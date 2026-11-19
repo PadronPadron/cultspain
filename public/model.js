@@ -205,9 +205,9 @@ export const validBookingDuration=duration=>Number.isSafeInteger(duration)&&dura
 const bookingBuffer=15;
 const busyRanges=bookings=>bookings.filter(b=>b.status!=='cancelled').map(b=>{
  const start=calendarMinute(b.date,b.time);
- return [start,start+b.duration+bookingBuffer];
+ return [start,start+b.duration+(b.external?0:bookingBuffer),!!b.external];
 });
-const isFree=(busy,start,duration)=>!busy.some(([a,b])=>overlaps(start,start+duration+bookingBuffer,a,b));
+const isFree=(busy,start,duration)=>!busy.some(([a,b,external])=>overlaps(start,start+duration+(external?0:bookingBuffer),a,b));
 function calendarClock(clock){
  const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(clock);
  const at=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Madrid',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(clock);
@@ -216,7 +216,7 @@ function calendarClock(clock){
 export function slots(s,date,service,clock=new Date(),leadMinutes=60){
  const current=calendarClock(clock);
  if(date<current.date||date>addDays(current.date,90))return [];
- const busy=busyRanges(s.bookings),midnight=calendarMinute(date),out=[];
+ const busy=busyRanges([...s.bookings,...(s.busy||[])]),midnight=calendarMinute(date),out=[];
  for(const [start,end] of intervals(s,date))for(let t=start;t+service.duration+bookingBuffer<=end;t+=15){
   if(date===current.date&&t<current.minute+leadMinutes)continue;
   if(isFree(busy,midnight+t,service.duration))out.push(time(t));
@@ -233,7 +233,7 @@ export function adminSlots(s,date,duration,original,clock=new Date()){
  }
  // The owner can edit a booking's duration after it has started.
  if(date===original.date)starts.add(original.time);
- const busy=busyRanges(s.bookings.filter(b=>b.id!==original.id));
+ const busy=busyRanges([...s.bookings.filter(b=>b.id!==original.id),...(s.busy||[])]);
  return [...starts].sort().filter(at=>Number.isFinite(bookingEnd(date,at,duration).getTime())&&isFree(busy,calendarMinute(date,at),duration));
 }
 export function conflicts(s){return s.bookings.filter(b=>b.status!=='cancelled'&&b.date>=today()&&!intervals(s,b.date).some(([a,z])=>min(b.time)>=a&&min(b.time)+b.duration+15<=z))}

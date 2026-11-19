@@ -1,4 +1,4 @@
-import{bookingServices,slots,services,serviceLabel,money,today,addDays,adminSlots,bookingEnd,validBookingDuration,validHours,escapeHTML as esc}from'./model.js';
+import{bookingServices,slots,services,serviceLabel,money,today,addDays,adminSlots,bookingEnd,validBookingDuration,validHours,escapeHTML as esc,calendarMinute,overlaps}from'./model.js';
 import{zipFiles}from'./zip.js';
 import { bookingCalendar, shiftBookingMonth } from './admin-calendar.js';
 const appointmentApp=document.body.classList.contains('agenda-app');
@@ -33,8 +33,8 @@ function renderBookingResults() {
  const rows = state.bookings.filter(b => matches(b.name, b.phone, service(b.service)));
  results.classList.toggle('agenda-content', agendaMode === 'calendar');
  results.innerHTML = agendaMode === 'calendar'
-  ? bookingCalendar(rows, agendaDate, today(), service)
-  : bookingTable(rows.sort((a, b) => (b.status === 'pending') - (a.status === 'pending') || (a.date + a.time).localeCompare(b.date + b.time)));
+  ? bookingCalendar([...rows,...(state.busy||[])], agendaDate, today(), service)
+  : ((state.busy||[]).length?`<p class="settings-note">Los bloqueos de iCloud se muestran en la vista Calendario.</p>`:'')+bookingTable(rows.sort((a, b) => (b.status === 'pending') - (a.status === 'pending') || (a.date + a.time).localeCompare(b.date + b.time)));
  if (focused) document.getElementById(focused)?.focus({ preventScroll: true });
 }
 function bookings() {
@@ -54,7 +54,11 @@ function bookings() {
   };
  }
  $('#booking-summary').textContent = `Solicitudes pendientes: ${state.bookings.filter(b => b.status === 'pending').length}. Las solicitudes pendientes reservan el horario.`;
- $('#booking-calendar').setAttribute('aria-pressed', agendaMode === 'calendar');
+ const conflicts=state.bookings.filter(b=>['pending','confirmed'].includes(b.status)&&(state.busy||[]).some(x=>overlaps(calendarMinute(b.date,b.time),calendarMinute(b.date,b.time)+b.duration,calendarMinute(x.date,x.time),calendarMinute(x.date,x.time)+x.duration)));
+ if((state.busy||[]).length)$('#booking-summary').textContent+=' Los bloques «Ocupado · iCloud» no admiten reservas.';
+ if(conflicts.length)$('#booking-summary').textContent+=` Atención: ${conflicts.length} citas coinciden con eventos de iCloud. Revisa: ${conflicts.map(b=>b.date+' '+b.time).join(', ')}.`;
+ if(state.icloud?.sources.some(s=>s.error))$('#booking-summary').textContent+=' iCloud no se ha podido actualizar. Se conservan los bloqueos anteriores; las nuevas reservas están pausadas.';
+ $('#booking-calendar').setAttribute('aria-pressed' , agendaMode === 'calendar');
  $('#booking-list').setAttribute('aria-pressed', agendaMode === 'list');
  renderBookingResults();
 }
@@ -234,3 +238,5 @@ $('.dialog-close').onclick=()=>dialog.close();window.addEventListener('hashchang
 setInterval(()=>{if(!dialog.open&&['bookings','overview'].includes(view)&&document.visibilityState==='visible'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))refresh()},15000);
 
 const requestedBooking=new URL(location.href).searchParams.get('booking');if(appointmentApp&&requestedBooking&&state){const requested=state.bookings.find(b=>b.id===requestedBooking);if(requested){agendaDate=requested.date;switchView('bookings');showBooking(requested.id);}}
+
+document.addEventListener('icloud-updated',refresh);

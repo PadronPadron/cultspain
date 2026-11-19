@@ -1,11 +1,13 @@
+import {ensureICloud,icloudBusy} from './icloud';
 import {pushQueueStmt} from './push';
 import {InputError,text,required,cents,date} from './accounting';
 import {calendarVersion,one,stmt,calendarBatch,auditStmt,all,id,now} from './store';
 import {notificationStmt,flushNotifications} from './notifications';
 // @ts-ignore Shared scheduling rules.
 import {bookingServices,adminSlots,bookingEnd,validBookingDuration,today,initial} from '../public/model.js';
-async function schedulingState(){const saved=await one("SELECT value FROM settings WHERE key='schedule'");const schedule=saved?JSON.parse(saved.value):{week:initial().week,exceptions:{}};return {...schedule,bookings:await all('SELECT id,date,time,duration,status FROM bookings')}}
+async function schedulingState(){const saved=await one("SELECT value FROM settings WHERE key='schedule'");const schedule=saved?JSON.parse(saved.value):{week:initial().week,exceptions:{}};return {...schedule,busy:await icloudBusy(),bookings:await all('SELECT id,date,time,duration,status FROM bookings')}}
 export async function changeBooking(key:string,b:any,actor:string,notifyNow=true){
+  if(['confirm','reschedule'].includes(b.action))await ensureICloud(true);
   const version=await calendarVersion(),old=await one('SELECT * FROM bookings WHERE id=?',[key]);
   if(!old)throw new InputError('No se ha encontrado el registro.',404);
   if(b.expectedDate!==undefined&&(b.expectedDate!==old.date||b.expectedTime!==old.time)||b.expectedStatus!==undefined&&b.expectedStatus!==old.status)throw new InputError('La cita ha cambiado. Actualiza su estado antes de continuar.',409);
@@ -25,9 +27,9 @@ export async function changeBooking(key:string,b:any,actor:string,notifyNow=true
    const day=b.action==='reschedule'?date(b.date):old.date,time=b.action==='reschedule'?required(b.time,'Hora',5):old.time;
    if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw new InputError('Introduce una hora válida.');
    if(!Number.isFinite(bookingEnd(day,time,duration).getTime()))throw new InputError('La fecha de fin está fuera del calendario.');
+   const s=await schedulingState();
+   if(!adminSlots(s,day,duration,old).includes(time))throw new InputError('La hora no está disponible o se solapa con otra cita. Elige otra hora o ajusta la duración.',409);
    if(b.action==='reschedule'||duration!==old.duration){
-    const s=await schedulingState();
-    if(!adminSlots(s,day,duration,old).includes(time))throw new InputError('La hora no está disponible o se solapa con otra cita. Elige otra hora o ajusta la duración.',409);
     // Older sent notices did not record a duration. Snapshot it before changing
     // the appointment so those buttons cannot confirm a different time block.
     if(duration!==old.duration)commands.push(stmt("UPDATE notifications SET payload=json_set(payload,'$.duration',?) WHERE booking_id=? AND json_valid(payload) AND json_extract(payload,'$.duration') IS NULL",[old.duration,key]));

@@ -1,3 +1,4 @@
+import {syncICloud} from '../lib/icloud';
 import handler from "vinext/server/fetch-handler";
 import { runWithConnectorBinding } from "../lib/connector-context";
 import type { ConnectorBinding } from "../lib/connector-contract.mjs";
@@ -6,6 +7,7 @@ import { flushNotifications } from "../lib/notifications";
 const worker = {
   scheduled(_event: ScheduledController, _env: Cloudflare.Env, ctx: ExecutionContext) {
     ctx.waitUntil(flushNotifications(10));
+    ctx.waitUntil(syncICloud());
   },
   fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
     let binding = ctx.props?.CONNECTORS;
